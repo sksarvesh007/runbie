@@ -1,12 +1,7 @@
-export const colors = {
+const palette = {
   primary: '#FF6B35',
   secondary: '#004E89',
   accent: '#F77F00',
-  background: '#FFFFFF',
-  surface: '#F5F5F5',
-  text: '#1A1A1A',
-  textSecondary: '#666666',
-  border: '#E0E0E0',
   error: '#D32F2F',
   success: '#388E3C',
   warning: '#F57C00',
@@ -26,3 +21,30 @@ export const colors = {
     900: '#212121',
   },
 };
+
+export const lightColors = {
+  ...palette,
+  background: palette.white,
+  surface: palette.gray[100],
+  text: palette.text || '#1A1A1A',
+  textSecondary: palette.textSecondary || '#666666',
+  border: palette.gray[300],
+  inputBackground: palette.gray[100],
+  card: palette.white,
+};
+
+export const darkColors = {
+  ...palette,
+  background: '#121212',
+  surface: '#1E1E1E',
+  text: '#FFFFFF',
+  textSecondary: '#AAAAAA',
+  border: '#333333',
+  inputBackground: '#2C2C2C',
+  // Adjust primary for dark mode if needed
+  primary: '#FF8A50', // Lighter orange for better contrast on dark bg
+  secondary: '#4CA1AF', // Lighter blue for dark mode
+  card: '#1E1E1E',
+};
+
+export const colors = lightColors; // Default backward compatibility

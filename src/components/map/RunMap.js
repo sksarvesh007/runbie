@@ -12,6 +12,7 @@ const RunMap = ({
   showZombie = true,
   followUser = true,
   style,
+  showOverlay = true,
 }) => {
   const mapRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(followUser);
@@ -66,13 +67,7 @@ const RunMap = ({
         longitudeDelta: 0.005,
       };
     }
-    // Default to a generic location if no current location
-    return {
-      latitude: 28.6139,
-      longitude: 77.209,
-      latitudeDelta: 0.01,
-      longitudeDelta: 0.01,
-    };
+    return null;
   };
 
   // Convert route points to coordinates for polyline
@@ -91,13 +86,23 @@ const RunMap = ({
     return theme.colors.zombie;
   };
 
+  const initialRegion = getInitialRegion();
+
+  if (!initialRegion) {
+    return (
+      <View style={[styles.container, style, styles.centerContainer]}>
+        <Text>Locating...</Text>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, style]}>
       <MapView
         ref={mapRef}
         style={styles.map}
         provider={PROVIDER_GOOGLE}
-        initialRegion={getInitialRegion()}
+        initialRegion={initialRegion}
         showsUserLocation={false}
         showsMyLocationButton={false}
         showsCompass={false}
@@ -185,7 +190,7 @@ const RunMap = ({
       </View>
 
       {/* Zombie Distance Overlay */}
-      {showZombie && (
+      {showZombie && showOverlay && (
         <View
           style={[
             styles.zombieOverlay,
@@ -209,6 +214,11 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: theme.borderRadius.lg,
     overflow: 'hidden',
+  },
+  centerContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
   },
   map: {
     flex: 1,

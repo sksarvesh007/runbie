@@ -5,7 +5,8 @@ import {
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
-import { theme } from '../../theme';
+import { theme as defaultTheme } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const Button = ({
   title,
@@ -17,25 +18,41 @@ const Button = ({
   style,
   textStyle,
 }) => {
-  const buttonStyles = [
-    styles.button,
-    styles[variant],
-    styles[size],
-    disabled && styles.disabled,
-    style,
-  ];
+  const { theme } = useTheme();
 
-  const textStyles = [
-    styles.text,
-    styles[`${variant}Text`],
-    styles[`${size}Text`],
-    disabled && styles.disabledText,
-    textStyle,
-  ];
+  const getButtonStyles = () => {
+    let variantStyle = {};
+    if (variant === 'primary') variantStyle = { backgroundColor: theme.colors.primary };
+    else if (variant === 'secondary') variantStyle = { backgroundColor: theme.colors.secondary };
+    else if (variant === 'outline') variantStyle = { backgroundColor: 'transparent', borderWidth: 2, borderColor: theme.colors.primary };
+
+    return [
+      styles.button,
+      variantStyle,
+      styles[size],
+      disabled && styles.disabled,
+      style,
+    ];
+  };
+
+  const getTextStyles = () => {
+    let variantTextStyle = {};
+    if (variant === 'primary') variantTextStyle = { color: theme.colors.white };
+    else if (variant === 'secondary') variantTextStyle = { color: theme.colors.white };
+    else if (variant === 'outline') variantTextStyle = { color: theme.colors.primary };
+
+    return [
+      styles.text,
+      variantTextStyle,
+      styles[`${size}Text`],
+      disabled && styles.disabledText,
+      textStyle,
+    ];
+  };
 
   return (
     <TouchableOpacity
-      style={buttonStyles}
+      style={getButtonStyles()}
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
@@ -47,7 +64,7 @@ const Button = ({
           }
         />
       ) : (
-        <Text style={textStyles}>{title}</Text>
+        <Text style={getTextStyles()}>{title}</Text>
       )}
     </TouchableOpacity>
   );
@@ -55,45 +72,25 @@ const Button = ({
 
 const styles = StyleSheet.create({
   button: {
-    borderRadius: theme.borderRadius.md,
+    borderRadius: defaultTheme.borderRadius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    ...theme.shadows.sm,
-  },
-  primary: {
-    backgroundColor: theme.colors.primary,
-  },
-  secondary: {
-    backgroundColor: theme.colors.secondary,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: theme.colors.primary,
+    ...defaultTheme.shadows.sm,
   },
   text: {
-    ...theme.typography.button,
-  },
-  primaryText: {
-    color: theme.colors.white,
-  },
-  secondaryText: {
-    color: theme.colors.white,
-  },
-  outlineText: {
-    color: theme.colors.primary,
+    ...defaultTheme.typography.button,
   },
   small: {
-    paddingVertical: theme.spacing.xs,
-    paddingHorizontal: theme.spacing.md,
+    paddingVertical: defaultTheme.spacing.xs,
+    paddingHorizontal: defaultTheme.spacing.md,
   },
   medium: {
-    paddingVertical: theme.spacing.sm,
-    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: defaultTheme.spacing.sm,
+    paddingHorizontal: defaultTheme.spacing.lg,
   },
   large: {
-    paddingVertical: theme.spacing.md,
-    paddingHorizontal: theme.spacing.xl,
+    paddingVertical: defaultTheme.spacing.md,
+    paddingHorizontal: defaultTheme.spacing.xl,
   },
   smallText: {
     fontSize: 14,

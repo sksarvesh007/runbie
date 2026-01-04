@@ -8,8 +8,10 @@ import { locationService } from '../../services/location.service';
 import { sessionService } from '../../services/session.service';
 import { subscriptionService } from '../../services/subscription.service';
 import useSessionStore from '../../store/sessionStore';
+import { useTheme } from '../../context/ThemeContext';
 
 const RunSetupScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [distanceGoal, setDistanceGoal] = useState('5');
   const [paceMin, setPaceMin] = useState('5');
   const [paceMax, setPaceMax] = useState('7');
@@ -154,9 +156,9 @@ const RunSetupScreen = ({ navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Setup Your Run 🏃‍♂️</Text>
-      <Text style={styles.subtitle}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
+      <Text style={[styles.title, { color: theme.colors.text }]}>Setup Your Run 🏃‍♂️</Text>
+      <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
         Configure your run settings and outrun the zombie!
       </Text>
 
@@ -168,7 +170,7 @@ const RunSetupScreen = ({ navigation }) => {
             sessionLimit.remaining <= 1 && styles.limitCardWarning,
           ]}
         >
-          <Text style={styles.limitTitle}>
+          <Text style={[styles.limitTitle, { color: theme.colors.text }]}>
             {sessionLimit.remaining > 0
               ? `🎫 ${sessionLimit.remaining} free session${sessionLimit.remaining > 1 ? 's' : ''} remaining`
               : '🚫 No sessions remaining'}
@@ -186,10 +188,10 @@ const RunSetupScreen = ({ navigation }) => {
 
       {!hasLocationPermission && (
         <Card style={styles.permissionCard}>
-          <Text style={styles.permissionTitle}>
+          <Text style={[styles.permissionTitle, { color: theme.colors.text }]}>
             📍 Location Permission Required
           </Text>
-          <Text style={styles.permissionText}>
+          <Text style={[styles.permissionText, { color: theme.colors.textSecondary }]}>
             We need access to your location to track your run distance and pace.
           </Text>
           <Button
@@ -201,7 +203,7 @@ const RunSetupScreen = ({ navigation }) => {
       )}
 
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Distance Goal</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Distance Goal</Text>
         <Input
           placeholder="Enter distance"
           value={distanceGoal}
@@ -209,37 +211,37 @@ const RunSetupScreen = ({ navigation }) => {
           keyboardType="decimal-pad"
           style={styles.input}
         />
-        <Text style={styles.unit}>kilometers</Text>
+        <Text style={[styles.unit, { color: theme.colors.textSecondary }]}>kilometers</Text>
       </Card>
 
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Your Pace Zone</Text>
-        <Text style={styles.cardDescription}>
+        <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Your Pace Zone</Text>
+        <Text style={[styles.cardDescription, { color: theme.colors.textSecondary }]}>
           Set your comfortable pace range (min/km). The zombie will chase you
           based on your max pace!
         </Text>
 
         <View style={styles.paceRow}>
           <View style={styles.paceInput}>
-            <Text style={styles.paceLabel}>Min Pace (Fast)</Text>
+            <Text style={[styles.paceLabel, { color: theme.colors.text }]}>Min Pace (Fast)</Text>
             <Input
               placeholder="5"
               value={paceMin}
               onChangeText={setPaceMin}
               keyboardType="decimal-pad"
             />
-            <Text style={styles.paceUnit}>min/km</Text>
+            <Text style={[styles.paceUnit, { color: theme.colors.textSecondary }]}>min/km</Text>
           </View>
 
           <View style={styles.paceInput}>
-            <Text style={styles.paceLabel}>Max Pace (Slow)</Text>
+            <Text style={[styles.paceLabel, { color: theme.colors.text }]}>Max Pace (Slow)</Text>
             <Input
               placeholder="7"
               value={paceMax}
               onChangeText={setPaceMax}
               keyboardType="decimal-pad"
             />
-            <Text style={styles.paceUnit}>min/km</Text>
+            <Text style={[styles.paceUnit, { color: theme.colors.textSecondary }]}>min/km</Text>
           </View>
         </View>
       </Card>
@@ -247,10 +249,10 @@ const RunSetupScreen = ({ navigation }) => {
       <Card style={[styles.card, styles.zombieCard]}>
         <Text style={styles.zombieTitle}>🧟 Zombie Info</Text>
         <View style={styles.zombieInfo}>
-          <Text style={styles.zombieLabel}>Zombie Pace:</Text>
-          <Text style={styles.zombiePace}>{calculateZombiePace()} min/km</Text>
+          <Text style={[styles.zombieLabel, { color: theme.colors.text }]}>Zombie Pace:</Text>
+          <Text style={[styles.zombiePace, { color: theme.colors.zombie }]}>{calculateZombiePace()} min/km</Text>
         </View>
-        <Text style={styles.zombieDescription}>
+        <Text style={[styles.zombieDescription, { color: theme.colors.textSecondary }]}>
           The zombie will chase you at this pace. If it catches you (within
           10m), it will start eating your distance!
         </Text>
@@ -367,7 +369,7 @@ const styles = StyleSheet.create({
   },
   zombiePace: {
     ...theme.typography.h2,
-    color: theme.colors.zombie,
+    // color: theme.colors.zombie, // Handled inline
   },
   zombieDescription: {
     ...theme.typography.body2,

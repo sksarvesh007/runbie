@@ -84,6 +84,9 @@ const SignupScreen = ({ navigation }) => {
           value={displayName}
           onChangeText={setDisplayName}
           autoCapitalize="words"
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <Input
@@ -93,6 +96,9 @@ const SignupScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <Input
@@ -103,6 +109,9 @@ const SignupScreen = ({ navigation }) => {
           secureTextEntry={!showPassword}
           rightIcon={showPassword ? 'eye-off' : 'eye'}
           onRightIconPress={() => setShowPassword(!showPassword)}
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <Input
@@ -113,13 +122,18 @@ const SignupScreen = ({ navigation }) => {
           secureTextEntry={!showConfirmPassword}
           rightIcon={showConfirmPassword ? 'eye-off' : 'eye'}
           onRightIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <Button
           title="Sign Up"
           onPress={handleSignup}
           loading={isLoading}
-          style={styles.signupButton}
+          onPress={handleSignup}
+          loading={isLoading}
+          style={[styles.signupButton, { backgroundColor: theme.colors.primary }]}
         />
       </View>
 

@@ -9,6 +9,7 @@ export const ZOMBIE_CONSTANTS = {
   DISTANCE_EATEN_PER_SECOND: 1, // meters eaten per second while caught
   CATCH_COOLDOWN: 5000, // ms - cooldown between catch events
   ZOMBIE_UPDATE_INTERVAL: 1000, // ms - how often zombie position updates
+  ZOMBIE_START_DELAY: 60, // seconds - delay before zombie starts chasing
 };
 
 class ZombieService {
@@ -19,11 +20,18 @@ class ZombieService {
   }
 
   // Calculate zombie's distance covered based on elapsed time and pace
-  calculateZombieDistance(elapsedTimeSeconds, zombiePaceMinPerKm) {
-    // zombiePace is in min/km
-    // Distance = (time in minutes) / pace * 1000 meters
-    const timeInMinutes = elapsedTimeSeconds / 60;
-    return (timeInMinutes / zombiePaceMinPerKm) * 1000;
+  calculateZombieDistance(elapsedTimeSeconds, zombiePaceMinPerKm, startDistance = 0) {
+    if (elapsedTimeSeconds < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY) {
+      return 0;
+    }
+
+    // Calculate time zombie has been actually chasing
+    const chaseTimeSeconds = elapsedTimeSeconds - ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY;
+    const timeInMinutes = chaseTimeSeconds / 60;
+
+    // Distance covered in the chase time + the distance where it started
+    const chaseDistance = (timeInMinutes / zombiePaceMinPerKm) * 1000;
+    return startDistance + chaseDistance;
   }
 
   // Calculate the gap between user and zombie (positive = user ahead)

@@ -9,7 +9,8 @@ import {
   Vibration,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { theme } from '../../theme';
+import { theme as defaultTheme } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 import Button from '../../components/common/Button';
 import { RunMap } from '../../components/map';
 import {
@@ -24,6 +25,7 @@ import { sessionService } from '../../services/session.service';
 import useSessionStore from '../../store/sessionStore';
 
 const ActiveRunScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [currentLocation, setCurrentLocation] = useState(null);
   const [zombieLocation, setZombieLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
@@ -63,6 +65,7 @@ const ActiveRunScreen = ({ navigation }) => {
 
   const lastWarningLevelRef = useRef(0);
   const catchStartTimeRef = useRef(null);
+  const zombieStartDistanceRef = useRef(null);
 
   // Start location tracking when component mounts
   useEffect(() => {
@@ -109,8 +112,16 @@ const ActiveRunScreen = ({ navigation }) => {
     }
 
     const eatingInterval = setInterval(() => {
-      // Eat distance every second while caught
-      addEatenDistance(ZOMBIE_CONSTANTS.DISTANCE_EATEN_PER_SECOND);
+      // Check effective distance before eating
+      const state = useSessionStore.getState();
+      const effectiveDistance = Math.max(
+        0,
+        state.distanceRun - state.totalDistanceEaten
+      );
+
+      if (effectiveDistance > 0) {
+        addEatenDistance(ZOMBIE_CONSTANTS.DISTANCE_EATEN_PER_SECOND);
+      }
     }, 1000);
 
     return () => clearInterval(eatingInterval);
@@ -236,11 +247,33 @@ const ActiveRunScreen = ({ navigation }) => {
     const { zombiePace } = currentSession;
     const elapsed = state.elapsedTime;
 
+    // Handle Zombie Start Delay
+    if (elapsed < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY) {
+      updateZombieDistance(0);
+      updateZombieGap(0); // Show 0m gap during start delay
+      setZombieLocation(null);
+      updateZombieStatus('safe');
+      return;
+    }
+
+    // Set drop distance if not set
+    if (zombieStartDistanceRef.current === null) {
+      zombieStartDistanceRef.current = state.distanceRun;
+    }
+
     // Calculate zombie distance using zombie service
-    const zombieDistanceCovered = zombieService.calculateZombieDistance(
+    let zombieDistanceCovered = zombieService.calculateZombieDistance(
       elapsed,
-      zombiePace
+      zombiePace,
+      zombieStartDistanceRef.current
     );
+
+    // CLAMP: Zombie cannot pass the user
+    // If calculated distance > user distance, clamp it to user distance
+    if (zombieDistanceCovered > state.distanceRun) {
+      zombieDistanceCovered = state.distanceRun;
+    }
+
     updateZombieDistance(zombieDistanceCovered);
 
     // Calculate gap (positive = user ahead)
@@ -265,8 +298,8 @@ const ActiveRunScreen = ({ navigation }) => {
     const status = zombieService.getZombieStatus(gap);
     updateZombieStatus(status.status);
 
-    // Trigger haptic feedback when warning level increases
-    if (status.level > lastWarningLevelRef.current) {
+    // Trigger haptic feedback when warning level increases (Only if moving)
+    if (state.distanceRun > 0 && status.level > lastWarningLevelRef.current) {
       zombieService.triggerHapticFeedback(status);
     }
     lastWarningLevelRef.current = status.level;
@@ -274,21 +307,29 @@ const ActiveRunScreen = ({ navigation }) => {
     // Check if zombie caught the user
     const wasCaught = state.isCaught;
     if (gap <= ZOMBIE_CONSTANTS.CATCH_DISTANCE) {
-      if (!wasCaught) {
-        // New catch event!
-        setIsCaught(true);
-        addCatchEvent({
-          timestamp: Date.now(),
-          distance: state.distanceRun,
-          elapsedTime: elapsed,
-        });
-        // Strong vibration for catch
-        Vibration.vibrate([0, 500, 200, 500, 200, 500]);
-        Alert.alert(
-          '🧟 CAUGHT!',
-          "The zombie caught you! It's eating your distance! Run faster to escape!",
-          [{ text: 'RUN!', style: 'destructive' }]
-        );
+      // ONLY trigger penalties if user has moved
+      if (state.distanceRun > 0) {
+        if (!wasCaught) {
+          // New catch event!
+          setIsCaught(true);
+          addCatchEvent({
+            timestamp: Date.now(),
+            distance: state.distanceRun,
+            elapsedTime: elapsed,
+          });
+          // Strong vibration for catch
+          Vibration.vibrate([0, 500, 200, 500, 200, 500]);
+          Alert.alert(
+            '🧟 CAUGHT!',
+            "The zombie caught you! It's eating your distance! Run faster to escape!",
+            [{ text: 'RUN!', style: 'destructive' }]
+          );
+        }
+      } else {
+        // Silent catch (no penalty)
+        // ensure we don't think we are caught in terms of state if we want to avoid "EATING" text
+        // But the zombie is effectively there.
+        // User asked: "dont do anything".
       }
     } else if (wasCaught && gap > ZOMBIE_CONSTANTS.CATCH_DISTANCE + 5) {
       // Escaped! Need to be 5m+ ahead to escape
@@ -415,68 +456,148 @@ const ActiveRunScreen = ({ navigation }) => {
           showZombie={true}
           followUser={true}
           style={styles.expandedMap}
+          showOverlay={false}
         />
 
-        {/* Floating Stats */}
-        <View style={styles.floatingStats}>
-          <View style={styles.floatingStat}>
-            <Text style={styles.floatingValue}>{formatTime(elapsedTime)}</Text>
-            <Text style={styles.floatingLabel}>Time</Text>
-          </View>
-          <View style={styles.floatingStat}>
-            <Text style={styles.floatingValue}>
-              {formatDistance(distanceRun)}
+        {/* Zombie Start Countdown Overlay */}
+        {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY && (
+          <View style={styles.countdownContainer}>
+            <Text style={styles.countdownLabel}>Zombie approaching in</Text>
+            <Text style={styles.countdownValue}>
+              {Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s
             </Text>
-            <Text style={styles.floatingLabel}>Distance</Text>
           </View>
-          <View style={styles.floatingStat}>
-            <Text style={styles.floatingValue}>{formatPace(currentPace)}</Text>
-            <Text style={styles.floatingLabel}>Pace</Text>
-          </View>
-        </View>
+        )}
 
-        {/* Collapse Button */}
+        {/* Collapse Button - Moved to Top Left */}
         <TouchableOpacity
           style={styles.collapseButton}
           onPress={() => setIsMapExpanded(false)}
         >
-          <Ionicons name="contract" size={24} color={theme.colors.text} />
+          <Ionicons name="contract" size={24} color={defaultTheme.colors.primary} />
         </TouchableOpacity>
 
-        {/* Control Buttons */}
-        <View style={styles.floatingControls}>
-          <TouchableOpacity
+        {/* Bottom Overlay Container */}
+        <View style={styles.bottomOverlay}>
+          {/* Stats Panel */}
+          <View
             style={[
-              styles.floatingControlBtn,
-              isPaused && styles.floatingControlBtnActive,
+              styles.expandedStatsPanel,
+              { backgroundColor: theme.colors.surface },
             ]}
-            onPress={handlePauseResume}
           >
-            <Ionicons
-              name={isPaused ? 'play' : 'pause'}
-              size={28}
-              color={isPaused ? '#FFF' : theme.colors.primary}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.floatingControlBtn, styles.floatingStopBtn]}
-            onPress={handleStopRun}
-          >
-            <Ionicons name="stop" size={28} color={theme.colors.error} />
-          </TouchableOpacity>
+            {/* Time Header */}
+            <View
+              style={[
+                styles.expandedTimeContainer,
+                { borderBottomColor: theme.colors.border },
+              ]}
+            >
+              <Text style={styles.expandedTimeLabel}>TIME</Text>
+              <Text style={[styles.expandedTime, { color: theme.colors.text }]}>
+                {formatTime(elapsedTime)}
+              </Text>
+            </View>
+
+            {/* Stats Grid */}
+            <View style={styles.expandedStatsGrid}>
+              <View style={styles.expandedStatItem}>
+                <Text
+                  style={[
+                    styles.expandedStatValue,
+                    { color: zombieStatus.color },
+                  ]}
+                >
+                  {zombieGap > 0
+                    ? `+${Math.round(zombieGap)}m`
+                    : `${Math.round(zombieGap)}m`}
+                </Text>
+                <Text style={styles.expandedStatLabel}>Gap</Text>
+              </View>
+
+              <View style={styles.expandedStatItem}>
+                <Text
+                  style={[
+                    styles.expandedStatValue,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  {formatPace(currentPace)}
+                </Text>
+                <Text style={styles.expandedStatLabel}>Pace</Text>
+              </View>
+
+              <View style={styles.expandedStatItem}>
+                <Text
+                  style={[
+                    styles.expandedStatValue,
+                    { color: theme.colors.text },
+                  ]}
+                >
+                  {formatDistance(distanceRun)}
+                </Text>
+                <Text style={styles.expandedStatLabel}>Distance</Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Controls Below Panel */}
+          <View style={styles.expandedControls}>
+            <TouchableOpacity
+              style={[
+                styles.expandedControlBtn,
+                isPaused && styles.expandedControlBtnActive,
+            <TouchableOpacity
+              style={[
+                styles.expandedControlBtn,
+                isPaused && styles.expandedControlBtnActive,
+                { borderColor: defaultTheme.colors.primary, borderWidth: 1 }
+              ]}
+              onPress={handlePauseResume}
+            >
+              <Ionicons
+                name={isPaused ? 'play' : 'pause'}
+                size={32}
+                color={defaultTheme.colors.primary}
+              />
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[styles.expandedControlBtn, styles.expandedStopBtn]}
+              onPress={handleStopRun}
+            >
+              <Ionicons name="stop" size={32} color={theme.colors.error} />
+            </TouchableOpacity>
+          </View>
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
       {/* Header with time */}
-      <View style={styles.header}>
-        <Text style={styles.timeLabel}>Time</Text>
-        <Text style={styles.time}>{formatTime(elapsedTime)}</Text>
-        {isPaused && <Text style={styles.pausedBadge}>PAUSED</Text>}
+      {/* Header with time and Zombie Status - Layout Change */}
+      <View style={styles.headerRow}>
+        <View style={styles.headerTimeContainer}>
+          <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>Time</Text>
+          <Text style={[styles.time, { color: theme.colors.text }]}>{formatTime(elapsedTime)}</Text>
+        </View>
+
+        {/* Header Right: Zombie Countdown (Side of Time) */}
+        <View style={styles.headerRightContainer}>
+          {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY && (
+            <View style={styles.headerCountdown}>
+              <Text style={[styles.countdownLabel, { color: theme.colors.textSecondary }]}>Zombie approaching in</Text>
+              <Text style={[styles.countdownValue, { color: theme.colors.primary }]}>
+                {Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s
+              </Text>
+            </View>
+          )}
+        </View>
       </View>
+
+      {isPaused && <View style={styles.pausedContainer}><Text style={styles.pausedBadge}>PAUSED</Text></View>}
 
       {/* Map Preview */}
       <TouchableOpacity
@@ -496,25 +617,50 @@ const ActiveRunScreen = ({ navigation }) => {
           <Ionicons name="expand" size={16} color="#FFF" />
           <Text style={styles.mapExpandText}>Tap to expand</Text>
         </View>
+
+
       </TouchableOpacity>
 
       {/* Main Stats */}
-      <View style={styles.mainStats}>
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>
-            {formatDistance(effectiveDistance)}
-          </Text>
-          <Text style={styles.statLabel}>Effective Distance</Text>
-          {totalDistanceEaten > 0 && (
-            <Text style={styles.eatenText}>
-              -{formatDistance(totalDistanceEaten)} eaten
+      {/* Main Stats Grid */}
+      <View style={styles.mainStatsGrid}>
+        {/* Row 1 */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
+              {formatDistance(effectiveDistance)}
             </Text>
-          )}
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Effective Dist</Text>
+            {totalDistanceEaten > 0 && (
+              <Text style={styles.eatenText}>-{formatDistance(totalDistanceEaten)}</Text>
+            )}
+          </View>
+
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>
+              {formatDistance(distanceRun)}
+            </Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Raw Dist</Text>
+          </View>
         </View>
 
-        <View style={styles.statBox}>
-          <Text style={styles.statValue}>{formatPace(currentPace)}</Text>
-          <Text style={styles.statLabel}>Pace (min/km)</Text>
+        {/* Row 2 */}
+        <View style={styles.statsRow}>
+          <View style={styles.statBox}>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{formatPace(currentPace)}</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Pace</Text>
+          </View>
+
+          {/* Zombie Status Box */}
+          <View style={styles.statBox}>
+            <View style={[styles.statusBadge, { backgroundColor: zombieStatus.color + '20', borderColor: zombieStatus.color }]}>
+              <Text style={styles.statusEmoji}>{zombieStatus.emoji}</Text>
+              <Text style={[styles.statusText, { color: zombieStatus.color }]}>{zombieStatus.text}</Text>
+            </View>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
+              {zombieGap > 0 ? `+${Math.round(zombieGap)}m` : `${Math.round(zombieGap)}m`}
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -530,6 +676,8 @@ const ActiveRunScreen = ({ navigation }) => {
       </View>
 
       {/* Zombie Status */}
+      {/* Zombie Status - Removed from bottom as it's now in top bar */}
+      {/* 
       <View
         style={[
           styles.zombieStatusBar,
@@ -564,20 +712,23 @@ const ActiveRunScreen = ({ navigation }) => {
           </View>
         )}
       </View>
+      */}
 
       {/* Control Buttons */}
       <View style={styles.controls}>
         <Button
           title={isPaused ? 'Resume' : 'Pause'}
           onPress={handlePauseResume}
-          variant={isPaused ? 'primary' : 'outline'}
-          style={styles.controlButton}
+          variant={'outline'} // Always outline to show orange border/text
+          style={[styles.controlButton, { borderColor: defaultTheme.colors.primary }]}
+          textStyle={{ color: defaultTheme.colors.primary }}
         />
         <Button
           title="Stop"
           onPress={handleStopRun}
           variant="outline"
           style={[styles.controlButton, styles.stopButton]}
+          textStyle={{ color: defaultTheme.colors.error }}
         />
       </View>
 
@@ -588,54 +739,102 @@ const ActiveRunScreen = ({ navigation }) => {
             styles.gpsIndicator,
             {
               backgroundColor: isTracking
-                ? theme.colors.success
-                : theme.colors.error,
+                ? defaultTheme.colors.success
+                : defaultTheme.colors.error,
             },
           ]}
         />
-        <Text style={styles.gpsText}>
+        <Text style={[styles.gpsText, { color: theme.colors.textSecondary }]}>
           {isTracking ? 'GPS Active' : 'GPS Inactive'}
         </Text>
       </View>
-    </SafeAreaView>
+    </SafeAreaView >
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: theme.spacing.lg,
+    // backgroundColor: defaultTheme.colors.background, // Handled via style prop or wrapper
+    padding: defaultTheme.spacing.lg,
   },
-  header: {
+  headerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: defaultTheme.spacing.md,
+    marginTop: defaultTheme.spacing.lg,
+  },
+  headerTimeContainer: {
+    alignItems: 'flex-start',
+  },
+  headerRightContainer: {
+    alignItems: 'flex-end',
+    justifyContent: 'center',
+    height: 60,
+  },
+  headerCountdown: {
+    alignItems: 'flex-end',
+  },
+  countdownLabel: {
+    ...defaultTheme.typography.caption,
+    marginBottom: 4,
+  },
+  countdownValue: {
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  pausedContainer: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl,
-    marginTop: theme.spacing.lg,
+    marginBottom: defaultTheme.spacing.lg,
   },
   timeLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
-    marginBottom: theme.spacing.xs,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
+    marginBottom: defaultTheme.spacing.xs,
   },
   time: {
     fontSize: 48,
     fontWeight: 'bold',
-    color: theme.colors.text,
+    color: defaultTheme.colors.text, // Overridden inline
   },
   pausedBadge: {
-    ...theme.typography.caption,
-    color: theme.colors.warning,
-    backgroundColor: theme.colors.warning + '20',
-    paddingHorizontal: theme.spacing.md,
-    paddingVertical: theme.spacing.xs,
-    borderRadius: theme.borderRadius.sm,
-    marginTop: theme.spacing.sm,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.warning,
+    backgroundColor: defaultTheme.colors.warning + '20',
+    paddingHorizontal: defaultTheme.spacing.md,
+    paddingVertical: defaultTheme.spacing.xs,
+    borderRadius: defaultTheme.borderRadius.sm,
+    marginTop: defaultTheme.spacing.sm,
     fontWeight: 'bold',
   },
   mainStats: {
+    // Deprecated, use mainStatsGrid
+  },
+  mainStatsGrid: {
+    marginBottom: defaultTheme.spacing.xl,
+  },
+  statsRow: {
     flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: theme.spacing.xl,
+    justifyContent: 'space-between',
+    marginBottom: defaultTheme.spacing.lg,
+  },
+  statusBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    borderWidth: 1,
+    marginBottom: 2,
+  },
+  statusEmoji: {
+    fontSize: 16,
+    marginRight: 4,
+  },
+  statusText: {
+    fontSize: 14,
+    fontWeight: 'bold',
   },
   statBox: {
     alignItems: 'center',
@@ -644,49 +843,49 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: theme.colors.primary,
+    // color: defaultTheme.colors.primary, // Inline
   },
   statLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
-    marginTop: theme.spacing.xs,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
+    marginTop: defaultTheme.spacing.xs,
   },
   progressContainer: {
-    marginBottom: theme.spacing.xl,
+    marginBottom: defaultTheme.spacing.xl,
   },
   progressBar: {
     height: 12,
-    backgroundColor: theme.colors.gray200,
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: defaultTheme.colors.gray200,
+    borderRadius: defaultTheme.borderRadius.sm,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: theme.colors.primary,
-    borderRadius: theme.borderRadius.sm,
+    backgroundColor: defaultTheme.colors.primary,
+    borderRadius: defaultTheme.borderRadius.sm,
   },
   progressText: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
     textAlign: 'center',
-    marginTop: theme.spacing.sm,
+    marginTop: defaultTheme.spacing.sm,
   },
   zombieCard: {
     borderWidth: 2,
-    marginBottom: theme.spacing.xl,
+    marginBottom: defaultTheme.spacing.xl,
   },
   zombieHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: theme.spacing.md,
+    marginBottom: defaultTheme.spacing.md,
   },
   zombieEmoji: {
     fontSize: 32,
-    marginRight: theme.spacing.sm,
+    marginRight: defaultTheme.spacing.sm,
   },
   zombieStatusText: {
-    ...theme.typography.h2,
+    ...defaultTheme.typography.h2,
     fontWeight: 'bold',
   },
   zombieStats: {
@@ -696,24 +895,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   zombieStatLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
   },
   zombieStatValue: {
-    ...theme.typography.h3,
+    ...defaultTheme.typography.h3,
     fontWeight: 'bold',
   },
   controls: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    gap: theme.spacing.md,
-    marginBottom: theme.spacing.lg,
+    gap: defaultTheme.spacing.md,
+    marginBottom: defaultTheme.spacing.lg,
   },
   controlButton: {
     flex: 1,
   },
   stopButton: {
-    borderColor: theme.colors.error,
+    borderColor: defaultTheme.colors.error,
   },
   gpsStatus: {
     flexDirection: 'row',
@@ -724,18 +923,18 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: theme.spacing.xs,
+    marginRight: defaultTheme.spacing.xs,
   },
   gpsText: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
   },
   // Map styles
   mapPreview: {
     height: 180,
-    borderRadius: theme.borderRadius.lg,
+    borderRadius: defaultTheme.borderRadius.lg,
     overflow: 'hidden',
-    marginBottom: theme.spacing.lg,
+    marginBottom: defaultTheme.spacing.lg,
   },
   mapExpandHint: {
     position: 'absolute',
@@ -746,66 +945,111 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: 10,
     paddingVertical: 6,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: defaultTheme.borderRadius.sm,
   },
   mapExpandText: {
-    ...theme.typography.caption,
+    ...defaultTheme.typography.caption,
     color: '#FFF',
     marginLeft: 4,
   },
   // Expanded map styles
   containerExpanded: {
     flex: 1,
-    backgroundColor: theme.colors.background,
+    backgroundColor: defaultTheme.colors.background,
   },
   expandedMap: {
     flex: 1,
   },
-  floatingStats: {
-    position: 'absolute',
-    top: 60,
-    left: 12,
-    right: 12,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: 'rgba(255,255,255,0.95)',
-    borderRadius: theme.borderRadius.lg,
-    paddingVertical: 12,
-    ...theme.shadows.medium,
-  },
-  floatingStat: {
-    alignItems: 'center',
-  },
-  floatingValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: theme.colors.primary,
-  },
-  floatingLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
-  },
   collapseButton: {
     position: 'absolute',
     top: 60,
-    right: 12,
+    left: 20, // Moved to left
     width: 44,
     height: 44,
     borderRadius: 22,
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.medium,
+    ...defaultTheme.shadows.medium,
+    zIndex: 10,
   },
-  floatingControls: {
+  bottomOverlay: {
     position: 'absolute',
-    bottom: 40,
+    bottom: 0,
     left: 0,
     right: 0,
+    padding: 20,
+    paddingBottom: 40,
+  },
+  expandedStatsPanel: {
+    // backgroundColor: '#1A1A1A', // Removed static color, will use inline style
+    borderRadius: 24,
+    padding: 16, // Reduced padding
+    marginBottom: 16, // Reduced margin
+    ...defaultTheme.shadows.lg,
+  },
+  expandedTimeContainer: {
+    alignItems: 'center',
+    marginBottom: 16, // Reduced margin
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+    paddingBottom: 12, // Reduced padding
+  },
+  expandedTimeLabel: {
+    color: '#888',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 4,
+    textTransform: 'uppercase',
+  },
+  expandedTime: {
+    color: '#FFF',
+    fontSize: 48, // Reduced font size slightly
+    fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
+  },
+  expandedStatsGrid: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  expandedStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  expandedStatValue: {
+    color: '#FFF',
+    fontSize: 24,
+    fontWeight: 'bold',
+    marginBottom: 4,
+  },
+  expandedStatLabel: {
+    color: '#888',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  expandedControls: {
     flexDirection: 'row',
     justifyContent: 'center',
-    gap: 20,
+    gap: 32,
   },
+  expandedControlBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#FFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...defaultTheme.shadows.lg,
+  },
+  expandedControlBtnActive: {
+    backgroundColor: defaultTheme.colors.primary,
+  },
+  expandedStopBtn: {
+    borderWidth: 2,
+    borderColor: defaultTheme.colors.error,
+  },
+
   floatingControlBtn: {
     width: 64,
     height: 64,
@@ -813,34 +1057,34 @@ const styles = StyleSheet.create({
     backgroundColor: '#FFF',
     justifyContent: 'center',
     alignItems: 'center',
-    ...theme.shadows.large,
+    ...defaultTheme.shadows.large,
   },
   floatingControlBtnActive: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: defaultTheme.colors.primary,
   },
   floatingStopBtn: {
     borderWidth: 2,
-    borderColor: theme.colors.error,
+    borderColor: defaultTheme.colors.error,
   },
   // Zombie status bar
   zombieStatusBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
+    padding: defaultTheme.spacing.md,
+    borderRadius: defaultTheme.borderRadius.md,
     borderWidth: 1,
-    marginBottom: theme.spacing.lg,
+    marginBottom: defaultTheme.spacing.lg,
   },
   zombieStatusInfo: {
     flex: 1,
   },
   zombieDistanceText: {
-    ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.textSecondary,
   },
   catchCountText: {
-    ...theme.typography.caption,
-    color: theme.colors.error,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.error,
     marginTop: 2,
   },
   caughtStatusBar: {
@@ -848,20 +1092,43 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   eatingIndicator: {
-    backgroundColor: theme.colors.zombie,
+    backgroundColor: defaultTheme.colors.zombie,
     paddingHorizontal: 8,
     paddingVertical: 4,
-    borderRadius: theme.borderRadius.sm,
+    borderRadius: defaultTheme.borderRadius.sm,
   },
   eatingText: {
-    ...theme.typography.caption,
+    ...defaultTheme.typography.caption,
     color: '#FFF',
     fontWeight: 'bold',
   },
   eatenText: {
-    ...theme.typography.caption,
-    color: theme.colors.error,
+    ...defaultTheme.typography.caption,
+    color: defaultTheme.colors.error,
     marginTop: 2,
+  },
+  countdownContainer: {
+    position: 'absolute',
+    top: 60,
+    alignSelf: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    zIndex: 20,
+  },
+  countdownLabel: {
+    color: '#FFF',
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  countdownValue: {
+    color: defaultTheme.colors.primary,
+    fontSize: 24,
+    fontWeight: 'bold',
   },
 });
 

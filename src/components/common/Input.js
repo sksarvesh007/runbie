@@ -8,6 +8,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
+import { useTheme } from '../../context/ThemeContext';
 
 const Input = ({
   label,
@@ -21,12 +22,22 @@ const Input = ({
   inputStyle,
   rightIcon,
   onRightIconPress,
+  contentContainerStyle,
   ...props
 }) => {
+  const { theme } = useTheme();
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <View style={[styles.inputContainer, error && styles.inputError]}>
+      <View style={[
+        styles.inputContainer,
+        {
+          backgroundColor: theme.colors.inputBackground || theme.colors.surface,
+          borderColor: theme.colors.border
+        },
+        error && styles.inputError,
+        contentContainerStyle,
+      ]}>
         <TextInput
           style={[styles.input, inputStyle]}
           value={value}
@@ -65,9 +76,9 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    // backgroundColor: theme.colors.white, // Handled inline
     borderWidth: 1,
-    borderColor: theme.colors.border,
+    borderColor: theme.colors.border, // Handled inline if needed, but border color usually static grey is okay or dynamic
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
   },

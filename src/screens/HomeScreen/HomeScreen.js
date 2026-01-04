@@ -12,9 +12,12 @@ import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import { sessionService } from '../../services/session.service';
 import { formatDistance, formatTime } from '../../services/location.service';
+
 import useAuthStore from '../../store/authStore';
+import { useTheme } from '../../context/ThemeContext';
 
 const HomeScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -49,18 +52,19 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={
         <RefreshControl
           refreshing={isRefreshing}
+          onRefresh={onRefresh}
           onRefresh={onRefresh}
           tintColor={theme.colors.primary}
         />
       }
     >
-      <View style={styles.content}>
-        <Text style={styles.title}>Welcome to Runbie! 🏃‍♂️🧟</Text>
-        <Text style={styles.subtitle}>
+      <View style={[styles.content]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Welcome to Runbie! 🏃‍♂️🧟</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
           Run from zombies, track your progress
         </Text>
 
@@ -72,8 +76,8 @@ const HomeScreen = ({ navigation }) => {
               size={28}
               color={theme.colors.primary}
             />
-            <Text style={styles.statValue}>{stats?.totalRuns || 0}</Text>
-            <Text style={styles.statLabel}>Total Runs</Text>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{stats?.totalRuns || 0}</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Runs</Text>
           </Card>
           <Card style={styles.statCard}>
             <Ionicons
@@ -81,10 +85,10 @@ const HomeScreen = ({ navigation }) => {
               size={28}
               color={theme.colors.primary}
             />
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>
               {formatDistance(stats?.totalDistance || 0)}
             </Text>
-            <Text style={styles.statLabel}>Total Distance</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Distance</Text>
           </Card>
         </View>
 
@@ -95,15 +99,15 @@ const HomeScreen = ({ navigation }) => {
               size={28}
               color={theme.colors.primary}
             />
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>
               {formatTime(stats?.totalTime || 0)}
             </Text>
-            <Text style={styles.statLabel}>Total Time</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Total Time</Text>
           </Card>
           <Card style={styles.statCard}>
             <Text style={styles.zombieIcon}>🧟</Text>
-            <Text style={styles.statValue}>{stats?.totalCatches || 0}</Text>
-            <Text style={styles.statLabel}>Times Caught</Text>
+            <Text style={[styles.statValue, { color: theme.colors.text }]}>{stats?.totalCatches || 0}</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Times Caught</Text>
           </Card>
         </View>
 
@@ -118,7 +122,7 @@ const HomeScreen = ({ navigation }) => {
               />
               <Text style={styles.sessionsTitle}>Free Account</Text>
             </View>
-            <Text style={styles.sessionsCount}>
+            <Text style={[styles.sessionsCount, { color: theme.colors.text }]}>
               {sessionsRemaining} sessions remaining
             </Text>
             <Button
@@ -136,7 +140,7 @@ const HomeScreen = ({ navigation }) => {
           style={styles.button}
         />
 
-        <Text style={styles.phaseNote}>
+        <Text style={[styles.phaseNote, { color: theme.colors.textSecondary }]}>
           ✅ Phase 1: Project Setup Complete{'\n'}✅ Phase 2: Authentication
           Complete{'\n'}✅ Phase 3: GPS Tracking Complete{'\n'}✅ Phase 4: Map
           Integration Complete{'\n'}✅ Phase 5: Zombie Chase Mechanics Complete
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
   },
   sessionsCount: {
     ...theme.typography.body1,
-    color: theme.colors.text,
+    // color: theme.colors.text, // Handled dynamically
     marginBottom: theme.spacing.md,
   },
   upgradeButton: {

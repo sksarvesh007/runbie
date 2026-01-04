@@ -12,8 +12,10 @@ import {
   formatTime,
   formatPace,
 } from '../../services/location.service';
+import { useTheme } from '../../context/ThemeContext';
 
 const SessionDetailScreen = ({ route, navigation }) => {
+  const { theme } = useTheme();
   const { sessionId } = route.params || {};
   const [session, setSession] = useState(null);
   const [routePoints, setRoutePoints] = useState([]);
@@ -95,10 +97,10 @@ const SessionDetailScreen = ({ route, navigation }) => {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.date}>{formatDate(session.startedAt)}</Text>
+        <Text style={[styles.date, { color: theme.colors.textSecondary }]}>{formatDate(session.startedAt)}</Text>
         <View
           style={[
             styles.statusBadge,
@@ -133,10 +135,10 @@ const SessionDetailScreen = ({ route, navigation }) => {
               size={24}
               color={theme.colors.primary}
             />
-            <Text style={styles.mainStatValue}>
+            <Text style={[styles.mainStatValue, { color: theme.colors.text }]}>
               {formatDistance(session.effectiveDistance || 0)}
             </Text>
-            <Text style={styles.mainStatLabel}>Distance</Text>
+            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Distance</Text>
           </View>
           <View style={styles.mainStat}>
             <Ionicons
@@ -144,10 +146,10 @@ const SessionDetailScreen = ({ route, navigation }) => {
               size={24}
               color={theme.colors.primary}
             />
-            <Text style={styles.mainStatValue}>
+            <Text style={[styles.mainStatValue, { color: theme.colors.text }]}>
               {formatTime(session.elapsedTime || 0)}
             </Text>
-            <Text style={styles.mainStatLabel}>Duration</Text>
+            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Duration</Text>
           </View>
           <View style={styles.mainStat}>
             <Ionicons
@@ -155,17 +157,17 @@ const SessionDetailScreen = ({ route, navigation }) => {
               size={24}
               color={theme.colors.primary}
             />
-            <Text style={styles.mainStatValue}>
+            <Text style={[styles.mainStatValue, { color: theme.colors.text }]}>
               {formatPace(session.averagePace || 0)}
             </Text>
-            <Text style={styles.mainStatLabel}>Avg Pace</Text>
+            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Avg Pace</Text>
           </View>
         </View>
       </Card>
 
       {/* Goal Progress */}
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>Goal Progress</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text }]}>Goal Progress</Text>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
             <View
@@ -177,7 +179,7 @@ const SessionDetailScreen = ({ route, navigation }) => {
               ]}
             />
           </View>
-          <Text style={styles.progressText}>
+          <Text style={[styles.progressText, { color: theme.colors.textSecondary }]}>
             {(session.completionPercentage || 0).toFixed(1)}% of{' '}
             {formatDistance(session.distanceGoal || 0)}
           </Text>
@@ -186,13 +188,13 @@ const SessionDetailScreen = ({ route, navigation }) => {
 
       {/* Zombie Stats */}
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>🧟 Zombie Stats</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text }]}>🧟 Zombie Stats</Text>
         <View style={styles.zombieStats}>
           <View style={styles.zombieStat}>
-            <Text style={styles.zombieStatValue}>
+            <Text style={[styles.zombieStatValue, { color: theme.colors.text }]}>
               {session.catchCount || 0}
             </Text>
-            <Text style={styles.zombieStatLabel}>Times Caught</Text>
+            <Text style={[styles.zombieStatLabel, { color: theme.colors.textSecondary }]}>Times Caught</Text>
           </View>
           <View style={styles.zombieStat}>
             <Text
@@ -200,35 +202,35 @@ const SessionDetailScreen = ({ route, navigation }) => {
             >
               {formatDistance(session.totalDistanceEaten || 0)}
             </Text>
-            <Text style={styles.zombieStatLabel}>Distance Eaten</Text>
+            <Text style={[styles.zombieStatLabel, { color: theme.colors.textSecondary }]}>Distance Eaten</Text>
           </View>
           <View style={styles.zombieStat}>
-            <Text style={styles.zombieStatValue}>
+            <Text style={[styles.zombieStatValue, { color: theme.colors.text }]}>
               {formatPace(session.zombiePace || 0)}
             </Text>
-            <Text style={styles.zombieStatLabel}>Zombie Pace</Text>
+            <Text style={[styles.zombieStatLabel, { color: theme.colors.textSecondary }]}>Zombie Pace</Text>
           </View>
         </View>
       </Card>
 
       {/* Pace Stats */}
       <Card style={styles.card}>
-        <Text style={styles.cardTitle}>⚡ Pace Details</Text>
+        <Text style={[styles.cardTitle, { color: theme.colors.text }]}>⚡ Pace Details</Text>
         <View style={styles.paceStats}>
           <View style={styles.paceStat}>
-            <Text style={styles.paceLabel}>Target Min</Text>
-            <Text style={styles.paceValue}>
+            <Text style={[styles.paceLabel, { color: theme.colors.textSecondary }]}>Target Min</Text>
+            <Text style={[styles.paceValue, { color: theme.colors.text }]}>
               {formatPace(session.paceMin || 0)}
             </Text>
           </View>
           <View style={styles.paceStat}>
-            <Text style={styles.paceLabel}>Target Max</Text>
-            <Text style={styles.paceValue}>
+            <Text style={[styles.paceLabel, { color: theme.colors.textSecondary }]}>Target Max</Text>
+            <Text style={[styles.paceValue, { color: theme.colors.text }]}>
               {formatPace(session.paceMax || 0)}
             </Text>
           </View>
           <View style={styles.paceStat}>
-            <Text style={styles.paceLabel}>Average</Text>
+            <Text style={[styles.paceLabel, { color: theme.colors.textSecondary }]}>Average</Text>
             <Text style={[styles.paceValue, { color: theme.colors.primary }]}>
               {formatPace(session.averagePace || 0)}
             </Text>
@@ -239,13 +241,13 @@ const SessionDetailScreen = ({ route, navigation }) => {
       {/* Catch Events */}
       {session.catchEvents && session.catchEvents.length > 0 && (
         <Card style={styles.card}>
-          <Text style={styles.cardTitle}>🎯 Catch Events</Text>
+          <Text style={[styles.cardTitle, { color: theme.colors.text }]}>🎯 Catch Events</Text>
           {session.catchEvents.map((event, index) => (
             <View key={index} style={styles.catchEvent}>
-              <Text style={styles.catchEventTime}>
+              <Text style={[styles.catchEventTime, { color: theme.colors.text }]}>
                 {formatTime(event.elapsedTime || 0)}
               </Text>
-              <Text style={styles.catchEventDistance}>
+              <Text style={[styles.catchEventDistance, { color: theme.colors.textSecondary }]}>
                 at {formatDistance(event.distance || 0)}
               </Text>
             </View>
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
   },
   zombieStatLabel: {
     ...theme.typography.caption,
-    color: theme.colors.textSecondary,
+    // color: theme.colors.textSecondary, // Handled dynamically
   },
   paceStats: {
     flexDirection: 'row',

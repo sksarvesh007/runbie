@@ -17,8 +17,10 @@ import {
   formatTime,
   formatPace,
 } from '../../services/location.service';
+import { useTheme } from '../../context/ThemeContext';
 
 const SessionHistoryScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [sessions, setSessions] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -107,7 +109,7 @@ const SessionHistoryScreen = ({ navigation }) => {
               size={16}
               color={theme.colors.textSecondary}
             />
-            <Text style={styles.dateText}>{formatDate(item.startedAt)}</Text>
+            <Text style={[styles.dateText, { color: theme.colors.textSecondary }]}>{formatDate(item.startedAt)}</Text>
           </View>
           <View
             style={[
@@ -128,22 +130,22 @@ const SessionHistoryScreen = ({ navigation }) => {
 
         <View style={styles.sessionStats}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
               {formatDistance(item.effectiveDistance || 0)}
             </Text>
-            <Text style={styles.statLabel}>Distance</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Distance</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
               {formatTime(item.elapsedTime || 0)}
             </Text>
-            <Text style={styles.statLabel}>Time</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Time</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>
+            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
               {formatPace(item.averagePace || 0)}
             </Text>
-            <Text style={styles.statLabel}>Pace</Text>
+            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Pace</Text>
           </View>
         </View>
 
@@ -201,7 +203,7 @@ const SessionHistoryScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
       <FlatList
         data={sessions}
         renderItem={renderSessionItem}
@@ -218,7 +220,7 @@ const SessionHistoryScreen = ({ navigation }) => {
         onEndReachedThreshold={0.5}
         ListEmptyComponent={renderEmptyState}
         ListHeaderComponent={
-          <Text style={styles.headerTitle}>Run History</Text>
+          <Text style={[styles.headerTitle, { color: theme.colors.text }]}>Run History</Text>
         }
       />
     </View>

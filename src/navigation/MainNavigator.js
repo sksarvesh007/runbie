@@ -9,13 +9,21 @@ import SessionHistoryScreen from '../screens/SessionHistoryScreen/SessionHistory
 import SessionDetailScreen from '../screens/SessionDetailScreen/SessionDetailScreen';
 import ProfileScreen from '../screens/ProfileScreen/ProfileScreen';
 import SubscriptionScreen from '../screens/SubscriptionScreen/SubscriptionScreen';
+import { useTheme } from '../context/ThemeContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createStackNavigator();
 
 const HomeStack = () => {
+  const { theme } = useTheme();
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: { color: theme.colors.text },
+      }}
+    >
       <Stack.Screen
         name="HomeMain"
         component={HomeScreen}
@@ -41,8 +49,15 @@ const HomeStack = () => {
 };
 
 const HistoryStack = () => {
+  const { theme } = useTheme();
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: { color: theme.colors.text },
+      }}
+    >
       <Stack.Screen
         name="SessionHistoryMain"
         component={SessionHistoryScreen}
@@ -58,8 +73,15 @@ const HistoryStack = () => {
 };
 
 const ProfileStack = () => {
+  const { theme } = useTheme();
   return (
-    <Stack.Navigator>
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.background },
+        headerTintColor: theme.colors.text,
+        headerTitleStyle: { color: theme.colors.text },
+      }}
+    >
       <Stack.Screen
         name="ProfileMain"
         component={ProfileScreen}
@@ -75,12 +97,17 @@ const ProfileStack = () => {
 };
 
 const MainNavigator = () => {
+  const { theme } = useTheme();
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FF6B35',
-        tabBarInactiveTintColor: '#666666',
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.textSecondary,
+        tabBarStyle: {
+          backgroundColor: theme.colors.background,
+          borderTopColor: theme.colors.border,
+        },
       }}
     >
       <Tab.Screen

@@ -16,9 +16,12 @@ import {
   subscriptionService,
   SUBSCRIPTION_PLANS,
 } from '../../services/subscription.service';
+
 import useAuthStore from '../../store/authStore';
+import { useTheme } from '../../context/ThemeContext';
 
 const SubscriptionScreen = ({ navigation }) => {
+  const { theme } = useTheme();
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [isLoading, setIsLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
@@ -119,8 +122,8 @@ const SubscriptionScreen = ({ navigation }) => {
             </View>
           )}
 
-          <Text style={styles.planName}>{plan.name}</Text>
-          <Text style={styles.planPrice}>{plan.priceDisplay}</Text>
+          <Text style={[styles.planName, { color: theme.colors.text }]}>{plan.name}</Text>
+          <Text style={[styles.planPrice, { color: theme.colors.primary }]}>{plan.priceDisplay}</Text>
 
           <View style={styles.featuresContainer}>
             {plan.features.map((feature, index) => (
@@ -130,7 +133,7 @@ const SubscriptionScreen = ({ navigation }) => {
                   size={18}
                   color={theme.colors.success}
                 />
-                <Text style={styles.featureText}>{feature}</Text>
+                <Text style={[styles.featureText, { color: theme.colors.text }]}>{feature}</Text>
               </View>
             ))}
           </View>
@@ -159,11 +162,11 @@ const SubscriptionScreen = ({ navigation }) => {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]} contentContainerStyle={styles.content}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Upgrade to Premium 🚀</Text>
-        <Text style={styles.subtitle}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Upgrade to Premium 🚀</Text>
+        <Text style={[styles.subtitle, { color: theme.colors.textSecondary }]}>
           Unlock unlimited zombie runs and advanced features
         </Text>
       </View>
@@ -178,8 +181,8 @@ const SubscriptionScreen = ({ navigation }) => {
               color={theme.colors.warning}
             />
             <View style={styles.statusInfo}>
-              <Text style={styles.statusTitle}>Free Account</Text>
-              <Text style={styles.statusText}>
+              <Text style={[styles.statusTitle, { color: theme.colors.text }]}>Free Account</Text>
+              <Text style={[styles.statusText, { color: theme.colors.textSecondary }]}>
                 {subscriptionStatus?.maxSessions -
                   subscriptionStatus?.sessionsUsed || 5}{' '}
                 sessions remaining
@@ -194,12 +197,12 @@ const SubscriptionScreen = ({ navigation }) => {
           <View style={styles.statusRow}>
             <Ionicons name="star" size={24} color={theme.colors.primary} />
             <View style={styles.statusInfo}>
-              <Text style={styles.statusTitle}>
+              <Text style={[styles.statusTitle, { color: theme.colors.text }]}>
                 {subscriptionStatus?.accountType === 'lifetime'
                   ? 'Lifetime Member'
                   : 'Premium Member'}
               </Text>
-              <Text style={styles.statusText}>
+              <Text style={[styles.statusText, { color: theme.colors.textSecondary }]}>
                 {subscriptionStatus?.subscriptionExpiry
                   ? `Expires: ${new Date(subscriptionStatus.subscriptionExpiry).toLocaleDateString()}`
                   : 'Never expires'}
@@ -210,7 +213,7 @@ const SubscriptionScreen = ({ navigation }) => {
       )}
 
       {/* Plan Cards */}
-      <Text style={styles.sectionTitle}>Choose Your Plan</Text>
+      <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>Choose Your Plan</Text>
 
       {renderPlanCard(SUBSCRIPTION_PLANS.MONTHLY, 'MONTHLY')}
       {renderPlanCard(SUBSCRIPTION_PLANS.YEARLY, 'YEARLY')}
@@ -226,7 +229,7 @@ const SubscriptionScreen = ({ navigation }) => {
       )}
 
       {/* Terms */}
-      <Text style={styles.terms}>
+      <Text style={[styles.terms, { color: theme.colors.textSecondary }]}>
         By subscribing, you agree to our Terms of Service and Privacy Policy.
         Subscriptions auto-renew unless cancelled.
       </Text>

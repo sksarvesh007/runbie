@@ -56,6 +56,9 @@ const LoginScreen = ({ navigation }) => {
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <Input
@@ -66,6 +69,9 @@ const LoginScreen = ({ navigation }) => {
           secureTextEntry={!showPassword}
           rightIcon={showPassword ? 'eye-off' : 'eye'}
           onRightIconPress={() => setShowPassword(!showPassword)}
+          contentContainerStyle={{ backgroundColor: theme.colors.inputBackground, borderColor: theme.colors.border }}
+          inputStyle={{ color: theme.colors.text }}
+          placeholderTextColor={theme.colors.gray[400]}
         />
 
         <TouchableOpacity
@@ -79,7 +85,9 @@ const LoginScreen = ({ navigation }) => {
           title="Login"
           onPress={handleLogin}
           loading={isLoading}
-          style={styles.loginButton}
+          onPress={handleLogin}
+          loading={isLoading}
+          style={[styles.loginButton, { backgroundColor: theme.colors.primary }]}
         />
       </View>
 
