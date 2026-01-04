@@ -197,12 +197,6 @@ const RunMap = ({
             { backgroundColor: getZombieColor() + '20' },
           ]}
         >
-          <Text style={styles.zombieOverlayEmoji}>🧟</Text>
-          <Text style={[styles.zombieOverlayText, { color: getZombieColor() }]}>
-            {zombieDistance > 0
-              ? `${Math.round(zombieDistance)}m ahead`
-              : `${Math.abs(Math.round(zombieDistance))}m behind!`}
-          </Text>
         </View>
       )}
     </View>

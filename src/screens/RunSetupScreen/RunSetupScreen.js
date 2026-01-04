@@ -247,15 +247,49 @@ const RunSetupScreen = ({ navigation }) => {
       </Card>
 
       <Card style={[styles.card, styles.zombieCard]}>
-        <Text style={styles.zombieTitle}>🧟 Zombie Info</Text>
-        <View style={styles.zombieInfo}>
-          <Text style={[styles.zombieLabel, { color: theme.colors.text }]}>Zombie Pace:</Text>
-          <Text style={[styles.zombiePace, { color: theme.colors.zombie }]}>{calculateZombiePace()} min/km</Text>
+        {/* Header with Icon */}
+        <View style={styles.zombieHeader}>
+          <View style={styles.zombieIconContainer}>
+            <Text style={styles.zombieIcon}>🧟</Text>
+          </View>
+          <Text style={styles.zombieTitle}>Zombie Threat</Text>
         </View>
-        <Text style={[styles.zombieDescription, { color: theme.colors.textSecondary }]}>
-          The zombie will chase you at this pace. If it catches you (within
-          10m), it will start eating your distance!
-        </Text>
+
+        {/* Pace Display - Centered and Prominent */}
+        <View style={styles.zombiePaceContainer}>
+          <Text style={styles.zombiePaceLabel}>CHASE SPEED</Text>
+          <View style={styles.zombiePaceValueContainer}>
+            <Text style={[styles.zombiePaceValue, { color: theme.colors.zombie }]}>
+              {calculateZombiePace()}
+            </Text>
+            <Text style={[styles.zombiePaceUnit, { color: theme.colors.zombie }]}>min/km</Text>
+          </View>
+        </View>
+
+        {/* Divider */}
+        <View style={[styles.zombieDivider, { backgroundColor: theme.colors.zombie + '30' }]} />
+
+        {/* Info Bullets */}
+        <View style={styles.zombieFeatures}>
+          <View style={styles.zombieFeatureItem}>
+            <Text style={styles.zombieFeatureDot}>⚡</Text>
+            <Text style={[styles.zombieFeatureText, { color: theme.colors.textSecondary }]}>
+              Starts chasing after 30 second head start
+            </Text>
+          </View>
+          <View style={styles.zombieFeatureItem}>
+            <Text style={styles.zombieFeatureDot}>🎯</Text>
+            <Text style={[styles.zombieFeatureText, { color: theme.colors.textSecondary }]}>
+              Catches you within 10 meters range
+            </Text>
+          </View>
+          <View style={styles.zombieFeatureItem}>
+            <Text style={styles.zombieFeatureDot}>💀</Text>
+            <Text style={[styles.zombieFeatureText, { color: theme.colors.textSecondary }]}>
+              Eats your distance when caught!
+            </Text>
+          </View>
+        </View>
       </Card>
 
       <Button
@@ -348,14 +382,82 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.xs,
   },
   zombieCard: {
-    backgroundColor: theme.colors.zombie + '15',
-    borderColor: theme.colors.zombie,
-    borderWidth: 1,
+    backgroundColor: theme.colors.zombie + '08',
+    borderColor: theme.colors.zombie + '40',
+    borderWidth: 2,
+    borderRadius: 20,
+    overflow: 'hidden',
+  },
+  zombieHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: theme.spacing.lg,
+  },
+  zombieIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: theme.colors.zombie + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: theme.spacing.md,
+  },
+  zombieIcon: {
+    fontSize: 28,
   },
   zombieTitle: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.zombie,
-    marginBottom: theme.spacing.md,
+    fontWeight: 'bold',
+    letterSpacing: 0.5,
+  },
+  zombiePaceContainer: {
+    alignItems: 'center',
+    paddingVertical: theme.spacing.lg,
+    backgroundColor: theme.colors.zombie + '10',
+    borderRadius: 16,
+    marginBottom: theme.spacing.lg,
+  },
+  zombiePaceLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    letterSpacing: 2,
+    color: theme.colors.zombie + '90',
+    marginBottom: theme.spacing.xs,
+  },
+  zombiePaceValueContainer: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  zombiePaceValue: {
+    fontSize: 56,
+    fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
+  },
+  zombiePaceUnit: {
+    fontSize: 18,
+    fontWeight: '600',
+    marginLeft: 8,
+    opacity: 0.8,
+  },
+  zombieDivider: {
+    height: 1,
+    marginBottom: theme.spacing.lg,
+  },
+  zombieFeatures: {
+    gap: theme.spacing.sm,
+  },
+  zombieFeatureItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  zombieFeatureDot: {
+    fontSize: 16,
+    marginRight: theme.spacing.sm,
+  },
+  zombieFeatureText: {
+    ...theme.typography.body2,
+    flex: 1,
   },
   zombieInfo: {
     flexDirection: 'row',
@@ -369,7 +471,6 @@ const styles = StyleSheet.create({
   },
   zombiePace: {
     ...theme.typography.h2,
-    // color: theme.colors.zombie, // Handled inline
   },
   zombieDescription: {
     ...theme.typography.body2,

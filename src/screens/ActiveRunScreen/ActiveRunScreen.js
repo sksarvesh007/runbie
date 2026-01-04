@@ -7,7 +7,12 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Vibration,
+  Platform,
+  StatusBar,
+  PanResponder,
+  Animated,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { theme as defaultTheme } from '../../theme';
 import { useTheme } from '../../context/ThemeContext';
@@ -30,8 +35,27 @@ const ActiveRunScreen = ({ navigation }) => {
   const [zombieLocation, setZombieLocation] = useState(null);
   const [isTracking, setIsTracking] = useState(false);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [isBottomPanelExpanded, setIsBottomPanelExpanded] = useState(true);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
+
+  // PanResponder for drag-to-expand/collapse
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onMoveShouldSetPanResponder: (_, gestureState) => {
+        return Math.abs(gestureState.dy) > 10;
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        // Swipe up to expand, swipe down to collapse
+        if (gestureState.dy < -50) {
+          setIsBottomPanelExpanded(true);
+        } else if (gestureState.dy > 50) {
+          setIsBottomPanelExpanded(false);
+        }
+      },
+    })
+  ).current;
 
   const {
     currentSession,
@@ -459,151 +483,265 @@ const ActiveRunScreen = ({ navigation }) => {
           showOverlay={false}
         />
 
-        {/* Zombie Start Countdown Overlay */}
+        {/* Zombie Start Countdown Overlay - Liquid Glass */}
         {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY && (
-          <View style={styles.countdownContainer}>
-            <Text style={styles.countdownLabel}>Zombie approaching in</Text>
-            <Text style={styles.countdownValue}>
-              {Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s
-            </Text>
-          </View>
+          <BlurView
+            intensity={80}
+            tint="dark"
+            style={styles.glassCountdownContainer}
+          >
+            <View style={styles.glassCountdownContent}>
+              <Text style={styles.glassCountdownLabel}>ZOMBIE APPROACHING IN</Text>
+              <Text style={styles.glassCountdownValue}>
+                {Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s
+              </Text>
+            </View>
+          </BlurView>
         )}
 
         {/* Collapse Button - Moved to Top Left */}
         <TouchableOpacity
-          style={styles.collapseButton}
+          style={[styles.collapseButton, { backgroundColor: defaultTheme.colors.primary }]}
           onPress={() => setIsMapExpanded(false)}
         >
-          <Ionicons name="contract" size={24} color={defaultTheme.colors.primary} />
+          <Ionicons name="contract" size={24} color="#FFF" />
         </TouchableOpacity>
 
-        {/* Bottom Overlay Container */}
-        <View style={styles.bottomOverlay}>
-          {/* Stats Panel */}
-          <View
-            style={[
-              styles.expandedStatsPanel,
-              { backgroundColor: theme.colors.surface },
-            ]}
+        {/* Bottom Overlay Container - Collapsible */}
+        <View style={styles.bottomOverlay} {...panResponder.panHandlers}>
+          {/* Pull Handle */}
+          <TouchableOpacity
+            style={styles.pullHandle}
+            onPress={() => setIsBottomPanelExpanded(!isBottomPanelExpanded)}
+            activeOpacity={0.7}
           >
-            {/* Time Header */}
-            <View
-              style={[
-                styles.expandedTimeContainer,
-                { borderBottomColor: theme.colors.border },
-              ]}
-            >
-              <Text style={styles.expandedTimeLabel}>TIME</Text>
-              <Text style={[styles.expandedTime, { color: theme.colors.text }]}>
-                {formatTime(elapsedTime)}
-              </Text>
-            </View>
+            <View style={styles.pullHandleBar} />
+            <Ionicons
+              name={isBottomPanelExpanded ? 'chevron-down' : 'chevron-up'}
+              size={20}
+              color="rgba(255,255,255,0.6)"
+            />
+          </TouchableOpacity>
 
-            {/* Stats Grid */}
-            <View style={styles.expandedStatsGrid}>
-              <View style={styles.expandedStatItem}>
-                <Text
+          {/* Collapsed Mini Stats */}
+          {!isBottomPanelExpanded && (
+            <BlurView
+              intensity={90}
+              tint="dark"
+              style={styles.collapsedStatsPanel}
+            >
+              <View style={styles.collapsedStatsContent}>
+                <View style={styles.collapsedStatItem}>
+                  <Text style={styles.collapsedStatValue}>{formatTime(elapsedTime)}</Text>
+                  <Text style={styles.collapsedStatLabel}>TIME</Text>
+                </View>
+                <View style={[styles.collapsedStatDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
+                <View style={styles.collapsedStatItem}>
+                  <Text style={[styles.collapsedStatValue, { color: zombieStatus.color }]}>
+                    {zombieGap > 0 ? `+${Math.round(zombieGap)}m` : `${Math.round(zombieGap)}m`}
+                  </Text>
+                  <Text style={styles.collapsedStatLabel}>GAP</Text>
+                </View>
+                <View style={[styles.collapsedStatDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
+                <View style={styles.collapsedStatItem}>
+                  <Text style={styles.collapsedStatValue}>{formatPace(currentPace)}</Text>
+                  <Text style={styles.collapsedStatLabel}>PACE</Text>
+                </View>
+                <View style={[styles.collapsedStatDivider, { backgroundColor: 'rgba(255,255,255,0.2)' }]} />
+                {/* Mini Control Buttons */}
+                <View style={styles.collapsedControlsContainer}>
+                  <TouchableOpacity
+                    style={styles.collapsedControlBtn}
+                    onPress={handlePauseResume}
+                  >
+                    <Ionicons
+                      name={isPaused ? 'play' : 'pause'}
+                      size={18}
+                      color="#FFF"
+                    />
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.collapsedControlBtn, styles.collapsedStopBtn]}
+                    onPress={handleStopRun}
+                  >
+                    <Ionicons name="stop" size={18} color="#FFF" />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </BlurView>
+          )}
+
+          {/* Expanded Stats Panel */}
+          {isBottomPanelExpanded && (
+            <>
+              <View
+                style={[
+                  styles.expandedStatsPanel,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+              >
+                {/* Time Header */}
+                <View
                   style={[
-                    styles.expandedStatValue,
-                    { color: zombieStatus.color },
+                    styles.expandedTimeContainer,
+                    { borderBottomColor: theme.colors.border },
                   ]}
                 >
-                  {zombieGap > 0
-                    ? `+${Math.round(zombieGap)}m`
-                    : `${Math.round(zombieGap)}m`}
-                </Text>
-                <Text style={styles.expandedStatLabel}>Gap</Text>
+                  <Text style={styles.expandedTimeLabel}>TIME</Text>
+                  <Text style={[styles.expandedTime, { color: theme.colors.text }]}>
+                    {formatTime(elapsedTime)}
+                  </Text>
+                </View>
+
+                {/* Stats Grid */}
+                <View style={styles.expandedStatsGrid}>
+                  <View style={styles.expandedStatItem}>
+                    <Text
+                      style={[
+                        styles.expandedStatValue,
+                        { color: zombieStatus.color },
+                      ]}
+                    >
+                      {zombieGap > 0
+                        ? `+${Math.round(zombieGap)}m`
+                        : `${Math.round(zombieGap)}m`}
+                    </Text>
+                    <Text style={styles.expandedStatLabel}>Gap</Text>
+                  </View>
+
+                  <View style={styles.expandedStatItem}>
+                    <Text
+                      style={[
+                        styles.expandedStatValue,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      {formatPace(currentPace)}
+                    </Text>
+                    <Text style={styles.expandedStatLabel}>Pace</Text>
+                  </View>
+
+                  <View style={styles.expandedStatItem}>
+                    <Text
+                      style={[
+                        styles.expandedStatValue,
+                        { color: theme.colors.text },
+                      ]}
+                    >
+                      {formatDistance(distanceRun)}
+                    </Text>
+                    <Text style={styles.expandedStatLabel}>Distance</Text>
+                  </View>
+                </View>
               </View>
 
-              <View style={styles.expandedStatItem}>
-                <Text
+              {/* Controls Below Panel */}
+              <View style={styles.expandedControls}>
+                <TouchableOpacity
                   style={[
-                    styles.expandedStatValue,
-                    { color: theme.colors.text },
+                    styles.expandedControlBtn,
+                    { backgroundColor: defaultTheme.colors.primary }
                   ]}
+                  onPress={handlePauseResume}
                 >
-                  {formatPace(currentPace)}
-                </Text>
-                <Text style={styles.expandedStatLabel}>Pace</Text>
-              </View>
+                  <Ionicons
+                    name={isPaused ? 'play' : 'pause'}
+                    size={32}
+                    color="#FFF"
+                  />
+                </TouchableOpacity>
 
-              <View style={styles.expandedStatItem}>
-                <Text
-                  style={[
-                    styles.expandedStatValue,
-                    { color: theme.colors.text },
-                  ]}
+                <TouchableOpacity
+                  style={[styles.expandedControlBtn, { backgroundColor: defaultTheme.colors.primary }]}
+                  onPress={handleStopRun}
                 >
-                  {formatDistance(distanceRun)}
-                </Text>
-                <Text style={styles.expandedStatLabel}>Distance</Text>
+                  <Ionicons name="stop" size={32} color="#FFF" />
+                </TouchableOpacity>
               </View>
-            </View>
-          </View>
-
-          {/* Controls Below Panel */}
-          <View style={styles.expandedControls}>
-            <TouchableOpacity
-              style={[
-                styles.expandedControlBtn,
-                isPaused && styles.expandedControlBtnActive,
-            <TouchableOpacity
-              style={[
-                styles.expandedControlBtn,
-                isPaused && styles.expandedControlBtnActive,
-                { borderColor: defaultTheme.colors.primary, borderWidth: 1 }
-              ]}
-              onPress={handlePauseResume}
-            >
-              <Ionicons
-                name={isPaused ? 'play' : 'pause'}
-                size={32}
-                color={defaultTheme.colors.primary}
-              />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.expandedControlBtn, styles.expandedStopBtn]}
-              onPress={handleStopRun}
-            >
-              <Ionicons name="stop" size={32} color={theme.colors.error} />
-            </TouchableOpacity>
-          </View>
+            </>
+          )}
         </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
-      {/* Header with time */}
-      {/* Header with time and Zombie Status - Layout Change */}
-      <View style={styles.headerRow}>
-        <View style={styles.headerTimeContainer}>
-          <Text style={[styles.timeLabel, { color: theme.colors.textSecondary }]}>Time</Text>
-          <Text style={[styles.time, { color: theme.colors.text }]}>{formatTime(elapsedTime)}</Text>
-        </View>
+    <View style={[styles.miniContainer, { backgroundColor: '#1A1A1A' }]}>
+      <StatusBar barStyle="light-content" />
 
-        {/* Header Right: Zombie Countdown (Side of Time) */}
-        <View style={styles.headerRightContainer}>
-          {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY && (
-            <View style={styles.headerCountdown}>
-              <Text style={[styles.countdownLabel, { color: theme.colors.textSecondary }]}>Zombie approaching in</Text>
-              <Text style={[styles.countdownValue, { color: theme.colors.primary }]}>
-                {Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s
-              </Text>
-            </View>
-          )}
+      {/* Top Section - TIME */}
+      <View style={styles.miniTimeSection}>
+        <Text style={styles.miniTimeLabel}>TIME</Text>
+        <View style={styles.miniTimeRow}>
+          <Text style={styles.miniTimeValue}>{formatTime(elapsedTime)}</Text>
+        </View>
+        <View style={styles.miniTimeSubLabels}>
+          <Text style={styles.miniTimeSubLabel}>M</Text>
+          <Text style={styles.miniTimeSubLabel}>S</Text>
+        </View>
+        {isPaused && (
+          <View style={styles.miniPausedBadge}>
+            <Text style={styles.miniPausedText}>PAUSED</Text>
+          </View>
+        )}
+      </View>
+
+      {/* Middle Section - Distance and Pace */}
+      <View style={styles.miniStatsRow}>
+        <View style={styles.miniStatBlock}>
+          <Text style={styles.miniStatLabel}>DISTANCE</Text>
+          <Text style={styles.miniStatValue}>{(distanceRun / 1000).toFixed(2)}</Text>
+        </View>
+        <View style={[styles.miniStatDivider, { backgroundColor: 'rgba(255,255,255,0.1)' }]} />
+        <View style={styles.miniStatBlock}>
+          <Text style={styles.miniStatLabel}>AVG. PACE</Text>
+          <Text style={styles.miniStatValue}>{formatPace(currentPace)}</Text>
         </View>
       </View>
 
-      {isPaused && <View style={styles.pausedContainer}><Text style={styles.pausedBadge}>PAUSED</Text></View>}
+      {/* Second Row - Effective Distance, Raw Distance, Zombie Status */}
+      <View style={styles.miniStatsRowSmall}>
+        <View style={styles.miniStatBlockSmall}>
+          <Text style={styles.miniStatLabelSmall}>EFFECTIVE</Text>
+          <Text style={[styles.miniStatValueSmall, { color: defaultTheme.colors.primary }]}>
+            {(effectiveDistance / 1000).toFixed(2)} km
+          </Text>
+          {totalDistanceEaten > 0 && (
+            <Text style={styles.miniEatenText}>-{(totalDistanceEaten / 1000).toFixed(2)}</Text>
+          )}
+        </View>
+        <View style={styles.miniStatBlockSmall}>
+          <Text style={styles.miniStatLabelSmall}>RAW DIST</Text>
+          <Text style={styles.miniStatValueSmall}>
+            {(distanceRun / 1000).toFixed(2)} km
+          </Text>
+        </View>
+        <View style={styles.miniStatBlockSmall}>
+          <View style={[styles.miniZombieBadge, { backgroundColor: zombieStatus.color + '25', borderColor: zombieStatus.color }]}>
+            <Text style={styles.miniZombieEmoji}>{zombieStatus.emoji}</Text>
+            <Text style={[styles.miniZombieText, { color: zombieStatus.color }]}>{zombieStatus.text}</Text>
+          </View>
+          <Text style={styles.miniStatLabelSmall}>
+            {zombieGap > 0 ? `+${Math.round(zombieGap)}m` : `${Math.round(zombieGap)}m`}
+          </Text>
+        </View>
+      </View>
 
-      {/* Map Preview */}
+      {/* Progress Bar */}
+      <View style={styles.miniProgressContainer}>
+        <View style={styles.miniProgressBar}>
+          <View style={[styles.miniProgressFill, { width: `${progress}%` }]} />
+        </View>
+        <Text style={styles.miniProgressText}>
+          {progress.toFixed(0)}% of {(currentSession?.distanceGoal / 1000 || 0).toFixed(1)} km
+        </Text>
+      </View>
+
+      {/* Map Section with Current KM Overlay */}
       <TouchableOpacity
-        style={styles.mapPreview}
+        style={styles.miniMapSection}
         onPress={() => setIsMapExpanded(true)}
-        activeOpacity={0.9}
+        activeOpacity={0.95}
       >
         <RunMap
           routePoints={routePoints}
@@ -612,128 +750,56 @@ const ActiveRunScreen = ({ navigation }) => {
           zombieDistance={zombieDistance}
           showZombie={true}
           followUser={true}
+          style={styles.miniMapInner}
+          showOverlay={false}
         />
-        <View style={styles.mapExpandHint}>
-          <Ionicons name="expand" size={16} color="#FFF" />
-          <Text style={styles.mapExpandText}>Tap to expand</Text>
+
+        {/* Current KM Overlay */}
+        <View style={styles.miniMapOverlay}>
+          <Text style={styles.miniMapOverlayLabel}>
+            {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY
+              ? `ZOMBIE IN ${Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s`
+              : 'ZOMBIE GAP'}
+          </Text>
+          <View style={styles.miniMapOverlayValues}>
+            <Text style={[styles.miniMapOverlayValue, { color: zombieStatus.color }]}>
+              {zombieGap > 0 ? `+${Math.round(zombieGap)}` : Math.round(zombieGap)}m
+            </Text>
+            <Text style={[styles.miniMapOverlayValue, { color: defaultTheme.colors.primary }]}>
+              {formatPace(currentPace)}
+            </Text>
+          </View>
         </View>
 
-
+        {/* Expand Hint */}
+        <View style={styles.miniExpandHint}>
+          <Ionicons name="expand" size={14} color="rgba(255,255,255,0.6)" />
+        </View>
       </TouchableOpacity>
 
-      {/* Main Stats */}
-      {/* Main Stats Grid */}
-      <View style={styles.mainStatsGrid}>
-        {/* Row 1 */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: theme.colors.primary }]}>
-              {formatDistance(effectiveDistance)}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Effective Dist</Text>
-            {totalDistanceEaten > 0 && (
-              <Text style={styles.eatenText}>-{formatDistance(totalDistanceEaten)}</Text>
-            )}
-          </View>
-
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: theme.colors.text }]}>
-              {formatDistance(distanceRun)}
-            </Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Raw Dist</Text>
-          </View>
-        </View>
-
-        {/* Row 2 */}
-        <View style={styles.statsRow}>
-          <View style={styles.statBox}>
-            <Text style={[styles.statValue, { color: theme.colors.text }]}>{formatPace(currentPace)}</Text>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>Pace</Text>
-          </View>
-
-          {/* Zombie Status Box */}
-          <View style={styles.statBox}>
-            <View style={[styles.statusBadge, { backgroundColor: zombieStatus.color + '20', borderColor: zombieStatus.color }]}>
-              <Text style={styles.statusEmoji}>{zombieStatus.emoji}</Text>
-              <Text style={[styles.statusText, { color: zombieStatus.color }]}>{zombieStatus.text}</Text>
-            </View>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>
-              {zombieGap > 0 ? `+${Math.round(zombieGap)}m` : `${Math.round(zombieGap)}m`}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Progress Bar */}
-      <View style={styles.progressContainer}>
-        <View style={styles.progressBar}>
-          <View style={[styles.progressFill, { width: `${progress}%` }]} />
-        </View>
-        <Text style={styles.progressText}>
-          {progress.toFixed(0)}% of{' '}
-          {formatDistance(currentSession?.distanceGoal || 0)}
-        </Text>
-      </View>
-
-      {/* Zombie Status */}
-      {/* Zombie Status - Removed from bottom as it's now in top bar */}
-      {/* 
-      <View
-        style={[
-          styles.zombieStatusBar,
-          {
-            backgroundColor: zombieStatus.color + '20',
-            borderColor: zombieStatus.color,
-          },
-          isCaught && styles.caughtStatusBar,
-        ]}
-      >
-        <Text style={styles.zombieEmoji}>{zombieStatus.emoji}</Text>
-        <View style={styles.zombieStatusInfo}>
-          <Text
-            style={[styles.zombieStatusText, { color: zombieStatus.color }]}
-          >
-            {zombieStatus.text}
-          </Text>
-          <Text style={styles.zombieDistanceText}>
-            {zombieGap > 0
-              ? `+${Math.round(zombieGap)}m ahead`
-              : `${Math.abs(Math.round(zombieGap))}m behind`}
-          </Text>
-          {catchCount > 0 && (
-            <Text style={styles.catchCountText}>
-              Caught {catchCount} time{catchCount > 1 ? 's' : ''}
-            </Text>
-          )}
-        </View>
-        {isCaught && (
-          <View style={styles.eatingIndicator}>
-            <Text style={styles.eatingText}>EATING!</Text>
-          </View>
-        )}
-      </View>
-      */}
-
-      {/* Control Buttons */}
-      <View style={styles.controls}>
-        <Button
-          title={isPaused ? 'Resume' : 'Pause'}
+      {/* Bottom Controls */}
+      <View style={styles.miniControlsSection}>
+        <TouchableOpacity
+          style={styles.miniPauseBtn}
           onPress={handlePauseResume}
-          variant={'outline'} // Always outline to show orange border/text
-          style={[styles.controlButton, { borderColor: defaultTheme.colors.primary }]}
-          textStyle={{ color: defaultTheme.colors.primary }}
-        />
-        <Button
-          title="Stop"
+        >
+          <Ionicons
+            name={isPaused ? 'play' : 'pause'}
+            size={28}
+            color="#FFF"
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.miniStopBtn}
           onPress={handleStopRun}
-          variant="outline"
-          style={[styles.controlButton, styles.stopButton]}
-          textStyle={{ color: defaultTheme.colors.error }}
-        />
+        >
+          <Ionicons name="stop" size={28} color="#FFF" />
+        </TouchableOpacity>
       </View>
 
       {/* GPS Status */}
-      <View style={styles.gpsStatus}>
+      <View style={styles.miniGpsStatus}>
         <View
           style={[
             styles.gpsIndicator,
@@ -744,11 +810,11 @@ const ActiveRunScreen = ({ navigation }) => {
             },
           ]}
         />
-        <Text style={[styles.gpsText, { color: theme.colors.textSecondary }]}>
+        <Text style={styles.miniGpsText}>
           {isTracking ? 'GPS Active' : 'GPS Inactive'}
         </Text>
       </View>
-    </SafeAreaView >
+    </View>
   );
 };
 
@@ -1129,6 +1195,337 @@ const styles = StyleSheet.create({
     color: defaultTheme.colors.primary,
     fontSize: 24,
     fontWeight: 'bold',
+  },
+  // Liquid Glass Countdown Styles
+  glassCountdownContainer: {
+    position: 'absolute',
+    top: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 0,
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    overflow: 'hidden',
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  glassCountdownContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    gap: 12,
+  },
+  glassCountdownLabel: {
+    color: 'rgba(255,255,255,0.85)',
+    fontSize: 13,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    textTransform: 'uppercase',
+  },
+  glassCountdownValue: {
+    color: defaultTheme.colors.primary,
+    fontSize: 28,
+    fontWeight: 'bold',
+    minWidth: 50,
+    textAlign: 'center',
+  },
+  // Pull Handle Styles
+  pullHandle: {
+    alignItems: 'center',
+    paddingVertical: 8,
+    paddingHorizontal: 40,
+  },
+  pullHandleBar: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 4,
+  },
+  // Collapsed Stats Panel Styles
+  collapsedStatsPanel: {
+    borderRadius: 20,
+    overflow: 'hidden',
+    marginHorizontal: 20,
+  },
+  collapsedStatsContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+  },
+  collapsedStatItem: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  collapsedStatValue: {
+    color: '#FFF',
+    fontSize: 20,
+    fontWeight: 'bold',
+    fontVariant: ['tabular-nums'],
+  },
+  collapsedStatLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 10,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginTop: 2,
+  },
+  collapsedStatDivider: {
+    width: 1,
+    height: 30,
+    marginHorizontal: 8,
+  },
+  // Collapsed Control Buttons
+  collapsedControlsContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginLeft: 4,
+  },
+  collapsedControlBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: defaultTheme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  collapsedStopBtn: {
+    backgroundColor: defaultTheme.colors.error,
+  },
+  // Mini View Styles (Non-Expanded)
+  miniContainer: {
+    flex: 1,
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight || 0 : 44,
+  },
+  miniTimeSection: {
+    alignItems: 'center',
+    paddingVertical: 24,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  miniTimeLabel: {
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 2,
+    marginBottom: 8,
+  },
+  miniTimeRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+  },
+  miniTimeValue: {
+    color: '#FFF',
+    fontSize: 72,
+    fontWeight: '200',
+    fontVariant: ['tabular-nums'],
+    letterSpacing: -2,
+  },
+  miniTimeSubLabels: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 80,
+    marginTop: 4,
+  },
+  miniTimeSubLabel: {
+    color: 'rgba(255,255,255,0.3)',
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  miniPausedBadge: {
+    marginTop: 12,
+    backgroundColor: defaultTheme.colors.warning + '30',
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  miniPausedText: {
+    color: defaultTheme.colors.warning,
+    fontSize: 14,
+    fontWeight: 'bold',
+    letterSpacing: 1,
+  },
+  miniStatsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  miniStatBlock: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  miniStatLabel: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  miniStatValue: {
+    color: '#FFF',
+    fontSize: 42,
+    fontWeight: '300',
+    fontVariant: ['tabular-nums'],
+  },
+  miniStatDivider: {
+    width: 1,
+    height: 50,
+  },
+  miniMapSection: {
+    flex: 1,
+    margin: 12,
+    borderRadius: 16,
+    overflow: 'hidden',
+    position: 'relative',
+  },
+  miniMapInner: {
+    flex: 1,
+  },
+  miniMapOverlay: {
+    position: 'absolute',
+    top: 12,
+    left: 12,
+    right: 12,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+  },
+  miniMapOverlayLabel: {
+    color: 'rgba(255,255,255,0.6)',
+    fontSize: 11,
+    fontWeight: '600',
+    letterSpacing: 1.5,
+    marginBottom: 6,
+  },
+  miniMapOverlayValues: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 24,
+  },
+  miniMapOverlayValue: {
+    fontSize: 36,
+    fontWeight: '300',
+    fontVariant: ['tabular-nums'],
+  },
+  miniExpandHint: {
+    position: 'absolute',
+    bottom: 8,
+    right: 8,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    padding: 6,
+    borderRadius: 6,
+  },
+  miniControlsSection: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 16,
+    gap: 24,
+  },
+  miniPauseBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: defaultTheme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniStopBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: defaultTheme.colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  miniGpsStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingBottom: 16,
+  },
+  miniGpsText: {
+    ...defaultTheme.typography.caption,
+    color: 'rgba(255,255,255,0.4)',
+  },
+  // Small Stats Row Styles
+  miniStatsRowSmall: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255,255,255,0.08)',
+  },
+  miniStatBlockSmall: {
+    alignItems: 'center',
+    flex: 1,
+  },
+  miniStatLabelSmall: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  miniStatValueSmall: {
+    color: '#FFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  miniEatenText: {
+    color: defaultTheme.colors.error,
+    fontSize: 11,
+    marginTop: 2,
+  },
+  miniZombieBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 4,
+  },
+  miniZombieEmoji: {
+    fontSize: 12,
+    marginRight: 3,
+  },
+  miniZombieText: {
+    fontSize: 11,
+    fontWeight: 'bold',
+  },
+  // Mini Progress Bar
+  miniProgressContainer: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+  },
+  miniProgressBar: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  miniProgressFill: {
+    height: '100%',
+    backgroundColor: defaultTheme.colors.primary,
+    borderRadius: 3,
+  },
+  miniProgressText: {
+    color: 'rgba(255,255,255,0.4)',
+    fontSize: 10,
+    textAlign: 'center',
+    marginTop: 4,
   },
 });
 

@@ -128,18 +128,33 @@ const SessionDetailScreen = ({ route, navigation }) => {
 
       {/* Main Stats */}
       <Card style={styles.statsCard}>
-        <View style={styles.mainStats}>
+        {/* Row 1: Distance Stats */}
+        <View style={styles.statsRow}>
+          <View style={styles.mainStat}>
+            <Ionicons
+              name="footsteps-outline"
+              size={24}
+              color={theme.colors.textSecondary}
+            />
+            <Text style={[styles.mainStatValue, { color: theme.colors.text }]}>
+              {formatDistance(session.distanceRun || session.effectiveDistance || 0)}
+            </Text>
+            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Raw Distance</Text>
+          </View>
           <View style={styles.mainStat}>
             <Ionicons
               name="speedometer-outline"
               size={24}
               color={theme.colors.primary}
             />
-            <Text style={[styles.mainStatValue, { color: theme.colors.text }]}>
+            <Text style={[styles.mainStatValue, { color: theme.colors.primary }]}>
               {formatDistance(session.effectiveDistance || 0)}
             </Text>
-            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Distance</Text>
+            <Text style={[styles.mainStatLabel, { color: theme.colors.textSecondary }]}>Effective Dist</Text>
           </View>
+        </View>
+        {/* Row 2: Time Stats */}
+        <View style={[styles.statsRow, { marginTop: 16 }]}>
           <View style={styles.mainStat}>
             <Ionicons
               name="time-outline"
@@ -324,12 +339,17 @@ const styles = StyleSheet.create({
   statsCard: {
     marginBottom: theme.spacing.lg,
   },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
   mainStats: {
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
   mainStat: {
     alignItems: 'center',
+    flex: 1,
   },
   mainStatValue: {
     ...theme.typography.h2,

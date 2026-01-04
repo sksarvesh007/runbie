@@ -45,6 +45,9 @@ export const darkColors = {
   primary: '#FF8A50', // Lighter orange for better contrast on dark bg
   secondary: '#4CA1AF', // Lighter blue for dark mode
   card: '#1E1E1E',
+  // Brighter zombie colors for dark mode visibility
+  zombie: '#ef5959ff', // Brighter red for dark mode
+  zombieWarning: '#f27373ff', // Lighter warning red
 };
 
 export const colors = lightColors; // Default backward compatibility

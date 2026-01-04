@@ -39,7 +39,7 @@ const Input = ({
         contentContainerStyle,
       ]}>
         <TextInput
-          style={[styles.input, inputStyle]}
+          style={[styles.input, { color: theme.colors.text }, inputStyle]}
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
