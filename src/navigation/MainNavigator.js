@@ -16,23 +16,23 @@ const Stack = createStackNavigator();
 const HomeStack = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="HomeMain" 
+      <Stack.Screen
+        name="HomeMain"
         component={HomeScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="RunSetup" 
+      <Stack.Screen
+        name="RunSetup"
         component={RunSetupScreen}
         options={{ title: 'Setup Run' }}
       />
-      <Stack.Screen 
-        name="ActiveRun" 
+      <Stack.Screen
+        name="ActiveRun"
         component={ActiveRunScreen}
         options={{ headerShown: false }}
       />
-      <Stack.Screen 
-        name="Subscription" 
+      <Stack.Screen
+        name="Subscription"
         component={SubscriptionScreen}
         options={{ title: 'Upgrade' }}
       />
@@ -43,13 +43,13 @@ const HomeStack = () => {
 const HistoryStack = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="SessionHistoryMain" 
+      <Stack.Screen
+        name="SessionHistoryMain"
         component={SessionHistoryScreen}
         options={{ title: 'Run History' }}
       />
-      <Stack.Screen 
-        name="SessionDetail" 
+      <Stack.Screen
+        name="SessionDetail"
         component={SessionDetailScreen}
         options={{ title: 'Run Details' }}
       />
@@ -60,13 +60,13 @@ const HistoryStack = () => {
 const ProfileStack = () => {
   return (
     <Stack.Navigator>
-      <Stack.Screen 
-        name="ProfileMain" 
+      <Stack.Screen
+        name="ProfileMain"
         component={ProfileScreen}
         options={{ title: 'Profile' }}
       />
-      <Stack.Screen 
-        name="Subscription" 
+      <Stack.Screen
+        name="Subscription"
         component={SubscriptionScreen}
         options={{ title: 'Subscription' }}
       />
@@ -83,30 +83,30 @@ const MainNavigator = () => {
         tabBarInactiveTintColor: '#666666',
       }}
     >
-      <Tab.Screen 
-        name="Home" 
+      <Tab.Screen
+        name="Home"
         component={HomeStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="home" size={size} color={color} />
           ),
         }}
       />
-      <Tab.Screen 
-        name="History" 
+      <Tab.Screen
+        name="History"
         component={HistoryStack}
-        options={{ 
+        options={{
           tabBarLabel: 'History',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="time" size={size} color={color} />
           ),
         }}
       />
-      <Tab.Screen 
-        name="Profile" 
+      <Tab.Screen
+        name="Profile"
         component={ProfileStack}
-        options={{ 
+        options={{
           tabBarLabel: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="person" size={size} color={color} />

@@ -7,47 +7,45 @@ import useAuthStore from '../../store/authStore';
 
 const ProfileScreen = ({ navigation }) => {
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
+  const setUser = useAuthStore(state => state.setUser);
 
   const handleLogout = async () => {
-    Alert.alert(
-      'Logout',
-      'Are you sure you want to logout?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Logout',
-          style: 'destructive',
-          onPress: async () => {
-            setIsLoggingOut(true);
-            try {
-              await authService.logout();
-              setUser(null);
-            } catch (error) {
-              console.error('Logout error:', error);
-              Alert.alert('Error', 'Failed to logout. Please try again.');
-            } finally {
-              setIsLoggingOut(false);
-            }
-          },
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Logout',
+        style: 'destructive',
+        onPress: async () => {
+          setIsLoggingOut(true);
+          try {
+            await authService.logout();
+            setUser(null);
+          } catch (error) {
+            console.error('Logout error:', error);
+            Alert.alert('Error', 'Failed to logout. Please try again.');
+          } finally {
+            setIsLoggingOut(false);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
-      <Text style={styles.subtitle}>Phase 2: User profile will be implemented here</Text>
-      
-      <Button 
-        title="View Subscription" 
+      <Text style={styles.subtitle}>
+        Phase 2: User profile will be implemented here
+      </Text>
+
+      <Button
+        title="View Subscription"
         onPress={() => navigation.navigate('Subscription')}
         style={styles.button}
       />
 
-      <Button 
-        title="Logout" 
+      <Button
+        title="Logout"
         onPress={handleLogout}
         loading={isLoggingOut}
         style={styles.logoutButton}

@@ -79,7 +79,7 @@ class ZombieService {
   // Check if zombie has caught the user
   checkCatch(gap, currentTime) {
     const wasCaught = this.isCaught;
-    
+
     if (gap <= ZOMBIE_CONSTANTS.CATCH_DISTANCE) {
       if (!this.isCaught) {
         // New catch event
@@ -133,15 +133,15 @@ class ZombieService {
   // Get encouraging message based on situation
   getEncouragingMessage(gap, userPace, zombiePace) {
     if (gap > 100) {
-      return "Great pace! Keep it up! 💪";
+      return 'Great pace! Keep it up! 💪';
     } else if (gap > 50) {
-      return "Good job! Stay focused! 🏃";
+      return 'Good job! Stay focused! 🏃';
     } else if (gap > 30) {
-      return "Pick up the pace! 😰";
+      return 'Pick up the pace! 😰';
     } else if (gap > 10) {
       return "RUN! It's right behind you! 😱";
     } else {
-      return "ESCAPE! Sprint now! 🧟‍♂️";
+      return 'ESCAPE! Sprint now! 🧟‍♂️';
     }
   }
 
@@ -175,16 +175,19 @@ class ZombieService {
     for (let i = 1; i < routePoints.length; i++) {
       const prev = routePoints[i - 1];
       const curr = routePoints[i];
-      
+
       const segmentDistance = this.haversineDistance(
-        prev.latitude, prev.longitude,
-        curr.latitude, curr.longitude
+        prev.latitude,
+        prev.longitude,
+        curr.latitude,
+        curr.longitude
       );
 
       if (accumulatedDistance + segmentDistance >= zombieDistance) {
         // Interpolate within this segment
         const remainingDistance = zombieDistance - accumulatedDistance;
-        const ratio = segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
+        const ratio =
+          segmentDistance > 0 ? remainingDistance / segmentDistance : 0;
 
         return {
           latitude: prev.latitude + (curr.latitude - prev.latitude) * ratio,

@@ -1,11 +1,22 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, StyleSheet, FlatList, RefreshControl, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  RefreshControl,
+  TouchableOpacity,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
 import { sessionService } from '../../services/session.service';
-import { formatDistance, formatTime, formatPace } from '../../services/location.service';
+import {
+  formatDistance,
+  formatTime,
+  formatPace,
+} from '../../services/location.service';
 
 const SessionHistoryScreen = ({ navigation }) => {
   const [sessions, setSessions] = useState([]);
@@ -26,7 +37,10 @@ const SessionHistoryScreen = ({ navigation }) => {
         setIsLoading(true);
       }
 
-      const result = await sessionService.getSessionHistory(20, refresh ? null : null);
+      const result = await sessionService.getSessionHistory(
+        20,
+        refresh ? null : null
+      );
       setSessions(result.sessions);
       setLastDoc(result.lastDoc);
       setHasMore(result.hasMore);
@@ -55,7 +69,7 @@ const SessionHistoryScreen = ({ navigation }) => {
     loadSessions(true);
   }, []);
 
-  const formatDate = (date) => {
+  const formatDate = date => {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('en-US', {
@@ -67,27 +81,46 @@ const SessionHistoryScreen = ({ navigation }) => {
     });
   };
 
-  const getStatusColor = (status) => {
+  const getStatusColor = status => {
     switch (status) {
-      case 'completed': return theme.colors.success;
-      case 'abandoned': return theme.colors.error;
-      default: return theme.colors.textSecondary;
+      case 'completed':
+        return theme.colors.success;
+      case 'abandoned':
+        return theme.colors.error;
+      default:
+        return theme.colors.textSecondary;
     }
   };
 
   const renderSessionItem = ({ item }) => (
     <TouchableOpacity
-      onPress={() => navigation.navigate('SessionDetail', { sessionId: item.id })}
+      onPress={() =>
+        navigation.navigate('SessionDetail', { sessionId: item.id })
+      }
       activeOpacity={0.7}
     >
       <Card style={styles.sessionCard}>
         <View style={styles.sessionHeader}>
           <View style={styles.sessionDate}>
-            <Ionicons name="calendar-outline" size={16} color={theme.colors.textSecondary} />
+            <Ionicons
+              name="calendar-outline"
+              size={16}
+              color={theme.colors.textSecondary}
+            />
             <Text style={styles.dateText}>{formatDate(item.startedAt)}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+          <View
+            style={[
+              styles.statusBadge,
+              { backgroundColor: getStatusColor(item.status) + '20' },
+            ]}
+          >
+            <Text
+              style={[
+                styles.statusText,
+                { color: getStatusColor(item.status) },
+              ]}
+            >
               {item.status === 'completed' ? '✓ Completed' : '✗ Abandoned'}
             </Text>
           </View>
@@ -95,15 +128,21 @@ const SessionHistoryScreen = ({ navigation }) => {
 
         <View style={styles.sessionStats}>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{formatDistance(item.effectiveDistance || 0)}</Text>
+            <Text style={styles.statValue}>
+              {formatDistance(item.effectiveDistance || 0)}
+            </Text>
             <Text style={styles.statLabel}>Distance</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{formatTime(item.elapsedTime || 0)}</Text>
+            <Text style={styles.statValue}>
+              {formatTime(item.elapsedTime || 0)}
+            </Text>
             <Text style={styles.statLabel}>Time</Text>
           </View>
           <View style={styles.stat}>
-            <Text style={styles.statValue}>{formatPace(item.averagePace || 0)}</Text>
+            <Text style={styles.statValue}>
+              {formatPace(item.averagePace || 0)}
+            </Text>
             <Text style={styles.statLabel}>Pace</Text>
           </View>
         </View>
@@ -123,11 +162,11 @@ const SessionHistoryScreen = ({ navigation }) => {
 
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                { width: `${Math.min(item.completionPercentage || 0, 100)}%` }
-              ]} 
+                styles.progressFill,
+                { width: `${Math.min(item.completionPercentage || 0, 100)}%` },
+              ]}
             />
           </View>
           <Text style={styles.progressText}>
@@ -137,7 +176,11 @@ const SessionHistoryScreen = ({ navigation }) => {
 
         <View style={styles.viewDetails}>
           <Text style={styles.viewDetailsText}>View Details</Text>
-          <Ionicons name="chevron-forward" size={16} color={theme.colors.primary} />
+          <Ionicons
+            name="chevron-forward"
+            size={16}
+            color={theme.colors.primary}
+          />
         </View>
       </Card>
     </TouchableOpacity>
@@ -162,7 +205,7 @@ const SessionHistoryScreen = ({ navigation }) => {
       <FlatList
         data={sessions}
         renderItem={renderSessionItem}
-        keyExtractor={(item) => item.id}
+        keyExtractor={item => item.id}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl

@@ -16,8 +16,8 @@ const RunSetupScreen = ({ navigation }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
   const [sessionLimit, setSessionLimit] = useState(null);
-  
-  const startSession = useSessionStore((state) => state.startSession);
+
+  const startSession = useSessionStore(state => state.startSession);
 
   useEffect(() => {
     checkPermissions();
@@ -62,22 +62,34 @@ const RunSetupScreen = ({ navigation }) => {
     const maxPace = parseFloat(paceMax);
 
     if (isNaN(distance) || distance <= 0 || distance > 100) {
-      Alert.alert('Invalid Distance', 'Please enter a distance between 0.1 and 100 km');
+      Alert.alert(
+        'Invalid Distance',
+        'Please enter a distance between 0.1 and 100 km'
+      );
       return false;
     }
 
     if (isNaN(minPace) || minPace <= 0 || minPace > 30) {
-      Alert.alert('Invalid Pace', 'Please enter a valid minimum pace (1-30 min/km)');
+      Alert.alert(
+        'Invalid Pace',
+        'Please enter a valid minimum pace (1-30 min/km)'
+      );
       return false;
     }
 
     if (isNaN(maxPace) || maxPace <= 0 || maxPace > 30) {
-      Alert.alert('Invalid Pace', 'Please enter a valid maximum pace (1-30 min/km)');
+      Alert.alert(
+        'Invalid Pace',
+        'Please enter a valid maximum pace (1-30 min/km)'
+      );
       return false;
     }
 
     if (minPace >= maxPace) {
-      Alert.alert('Invalid Pace Range', 'Minimum pace should be faster (lower number) than maximum pace');
+      Alert.alert(
+        'Invalid Pace Range',
+        'Minimum pace should be faster (lower number) than maximum pace'
+      );
       return false;
     }
 
@@ -92,7 +104,10 @@ const RunSetupScreen = ({ navigation }) => {
         'You have used all your free sessions. Upgrade to Premium for unlimited zombie runs!',
         [
           { text: 'Cancel', style: 'cancel' },
-          { text: 'Upgrade', onPress: () => navigation.navigate('Subscription') },
+          {
+            text: 'Upgrade',
+            onPress: () => navigation.navigate('Subscription'),
+          },
         ]
       );
       return;
@@ -141,13 +156,20 @@ const RunSetupScreen = ({ navigation }) => {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Setup Your Run 🏃‍♂️</Text>
-      <Text style={styles.subtitle}>Configure your run settings and outrun the zombie!</Text>
+      <Text style={styles.subtitle}>
+        Configure your run settings and outrun the zombie!
+      </Text>
 
       {/* Session Limit Warning */}
       {sessionLimit && sessionLimit.remaining !== -1 && (
-        <Card style={[styles.limitCard, sessionLimit.remaining <= 1 && styles.limitCardWarning]}>
+        <Card
+          style={[
+            styles.limitCard,
+            sessionLimit.remaining <= 1 && styles.limitCardWarning,
+          ]}
+        >
           <Text style={styles.limitTitle}>
-            {sessionLimit.remaining > 0 
+            {sessionLimit.remaining > 0
               ? `🎫 ${sessionLimit.remaining} free session${sessionLimit.remaining > 1 ? 's' : ''} remaining`
               : '🚫 No sessions remaining'}
           </Text>
@@ -164,7 +186,9 @@ const RunSetupScreen = ({ navigation }) => {
 
       {!hasLocationPermission && (
         <Card style={styles.permissionCard}>
-          <Text style={styles.permissionTitle}>📍 Location Permission Required</Text>
+          <Text style={styles.permissionTitle}>
+            📍 Location Permission Required
+          </Text>
           <Text style={styles.permissionText}>
             We need access to your location to track your run distance and pace.
           </Text>
@@ -191,9 +215,10 @@ const RunSetupScreen = ({ navigation }) => {
       <Card style={styles.card}>
         <Text style={styles.cardTitle}>Your Pace Zone</Text>
         <Text style={styles.cardDescription}>
-          Set your comfortable pace range (min/km). The zombie will chase you based on your max pace!
+          Set your comfortable pace range (min/km). The zombie will chase you
+          based on your max pace!
         </Text>
-        
+
         <View style={styles.paceRow}>
           <View style={styles.paceInput}>
             <Text style={styles.paceLabel}>Min Pace (Fast)</Text>
@@ -205,7 +230,7 @@ const RunSetupScreen = ({ navigation }) => {
             />
             <Text style={styles.paceUnit}>min/km</Text>
           </View>
-          
+
           <View style={styles.paceInput}>
             <Text style={styles.paceLabel}>Max Pace (Slow)</Text>
             <Input
@@ -226,12 +251,13 @@ const RunSetupScreen = ({ navigation }) => {
           <Text style={styles.zombiePace}>{calculateZombiePace()} min/km</Text>
         </View>
         <Text style={styles.zombieDescription}>
-          The zombie will chase you at this pace. If it catches you (within 10m), it will start eating your distance!
+          The zombie will chase you at this pace. If it catches you (within
+          10m), it will start eating your distance!
         </Text>
       </Card>
 
       <Button
-        title={hasLocationPermission ? "Start Run" : "Enable Location First"}
+        title={hasLocationPermission ? 'Start Run' : 'Enable Location First'}
         onPress={handleStartRun}
         loading={isLoading}
         style={styles.startButton}

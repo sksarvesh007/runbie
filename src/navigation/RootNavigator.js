@@ -14,7 +14,7 @@ const RootNavigator = () => {
 
   useEffect(() => {
     let unsubscribe = () => {};
-    
+
     // Timeout fallback in case Firebase auth fails to initialize
     const timeout = setTimeout(() => {
       console.log('Auth initialization timeout - showing login screen');
@@ -23,7 +23,7 @@ const RootNavigator = () => {
 
     try {
       // Listen for authentication state changes
-      unsubscribe = auth.onAuthStateChanged(async (user) => {
+      unsubscribe = auth.onAuthStateChanged(async user => {
         clearTimeout(timeout);
         try {
           if (user) {

@@ -25,7 +25,12 @@ export const SUBSCRIPTION_PLANS = {
     price: 80,
     currency: 'USD',
     duration: '1 year',
-    features: ['Unlimited runs', 'All features', 'Priority support', '33% savings'],
+    features: [
+      'Unlimited runs',
+      'All features',
+      'Priority support',
+      '33% savings',
+    ],
   },
   LIFETIME: {
     id: 'lifetime',
@@ -33,7 +38,12 @@ export const SUBSCRIPTION_PLANS = {
     price: 150,
     currency: 'USD',
     duration: 'Forever',
-    features: ['Unlimited runs', 'All features', 'Priority support', 'One-time payment'],
+    features: [
+      'Unlimited runs',
+      'All features',
+      'Priority support',
+      'One-time payment',
+    ],
   },
 };
 

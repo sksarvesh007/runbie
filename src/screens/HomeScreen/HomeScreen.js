@@ -1,5 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  RefreshControl,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import Button from '../../components/common/Button';
@@ -12,7 +18,7 @@ const HomeScreen = ({ navigation }) => {
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const user = useAuthStore((state) => state.user);
+  const user = useAuthStore(state => state.user);
 
   useEffect(() => {
     loadStats();
@@ -37,10 +43,12 @@ const HomeScreen = ({ navigation }) => {
     loadStats(true);
   };
 
-  const sessionsRemaining = user?.maxSessions ? user.maxSessions - (user.sessionsUsed || 0) : 5;
+  const sessionsRemaining = user?.maxSessions
+    ? user.maxSessions - (user.sessionsUsed || 0)
+    : 5;
 
   return (
-    <ScrollView 
+    <ScrollView
       style={styles.container}
       refreshControl={
         <RefreshControl
@@ -52,26 +60,44 @@ const HomeScreen = ({ navigation }) => {
     >
       <View style={styles.content}>
         <Text style={styles.title}>Welcome to Runbie! 🏃‍♂️🧟</Text>
-        <Text style={styles.subtitle}>Run from zombies, track your progress</Text>
-        
+        <Text style={styles.subtitle}>
+          Run from zombies, track your progress
+        </Text>
+
         {/* Stats Cards */}
         <View style={styles.statsGrid}>
           <Card style={styles.statCard}>
-            <Ionicons name="fitness-outline" size={28} color={theme.colors.primary} />
+            <Ionicons
+              name="fitness-outline"
+              size={28}
+              color={theme.colors.primary}
+            />
             <Text style={styles.statValue}>{stats?.totalRuns || 0}</Text>
             <Text style={styles.statLabel}>Total Runs</Text>
           </Card>
           <Card style={styles.statCard}>
-            <Ionicons name="speedometer-outline" size={28} color={theme.colors.primary} />
-            <Text style={styles.statValue}>{formatDistance(stats?.totalDistance || 0)}</Text>
+            <Ionicons
+              name="speedometer-outline"
+              size={28}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.statValue}>
+              {formatDistance(stats?.totalDistance || 0)}
+            </Text>
             <Text style={styles.statLabel}>Total Distance</Text>
           </Card>
         </View>
 
         <View style={styles.statsGrid}>
           <Card style={styles.statCard}>
-            <Ionicons name="time-outline" size={28} color={theme.colors.primary} />
-            <Text style={styles.statValue}>{formatTime(stats?.totalTime || 0)}</Text>
+            <Ionicons
+              name="time-outline"
+              size={28}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.statValue}>
+              {formatTime(stats?.totalTime || 0)}
+            </Text>
             <Text style={styles.statLabel}>Total Time</Text>
           </Card>
           <Card style={styles.statCard}>
@@ -85,10 +111,16 @@ const HomeScreen = ({ navigation }) => {
         {user?.accountType === 'free' && (
           <Card style={styles.sessionsCard}>
             <View style={styles.sessionsHeader}>
-              <Ionicons name="ticket-outline" size={24} color={theme.colors.warning} />
+              <Ionicons
+                name="ticket-outline"
+                size={24}
+                color={theme.colors.warning}
+              />
               <Text style={styles.sessionsTitle}>Free Account</Text>
             </View>
-            <Text style={styles.sessionsCount}>{sessionsRemaining} sessions remaining</Text>
+            <Text style={styles.sessionsCount}>
+              {sessionsRemaining} sessions remaining
+            </Text>
             <Button
               title="Upgrade to Premium"
               variant="outline"
@@ -98,20 +130,18 @@ const HomeScreen = ({ navigation }) => {
           </Card>
         )}
 
-        <Button 
-          title="Start New Run" 
+        <Button
+          title="Start New Run"
           onPress={() => navigation.navigate('RunSetup')}
           style={styles.button}
         />
 
         <Text style={styles.phaseNote}>
-          ✅ Phase 1: Project Setup Complete{'\n'}
-          ✅ Phase 2: Authentication Complete{'\n'}
-          ✅ Phase 3: GPS Tracking Complete{'\n'}
-          ✅ Phase 4: Map Integration Complete{'\n'}
-          ✅ Phase 5: Zombie Chase Mechanics Complete{'\n'}
-          ✅ Phase 6: Session Management Complete{'\n'}
-          ✅ Phase 7: Subscriptions & Payments Complete
+          ✅ Phase 1: Project Setup Complete{'\n'}✅ Phase 2: Authentication
+          Complete{'\n'}✅ Phase 3: GPS Tracking Complete{'\n'}✅ Phase 4: Map
+          Integration Complete{'\n'}✅ Phase 5: Zombie Chase Mechanics Complete
+          {'\n'}✅ Phase 6: Session Management Complete{'\n'}✅ Phase 7:
+          Subscriptions & Payments Complete
         </Text>
       </View>
     </ScrollView>

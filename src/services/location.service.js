@@ -17,7 +17,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
 };
 
 // Calculate pace in min/km from speed in m/s
-export const calculatePace = (speedMs) => {
+export const calculatePace = speedMs => {
   if (!speedMs || speedMs <= 0) return 0;
   // Convert m/s to min/km
   // 1 km = 1000m, 1 min = 60s
@@ -26,7 +26,7 @@ export const calculatePace = (speedMs) => {
 };
 
 // Format pace as MM:SS
-export const formatPace = (paceMinPerKm) => {
+export const formatPace = paceMinPerKm => {
   if (!paceMinPerKm || paceMinPerKm <= 0 || paceMinPerKm > 30) return '--:--';
   const minutes = Math.floor(paceMinPerKm);
   const seconds = Math.round((paceMinPerKm - minutes) * 60);
@@ -34,7 +34,7 @@ export const formatPace = (paceMinPerKm) => {
 };
 
 // Format distance in km or m
-export const formatDistance = (meters) => {
+export const formatDistance = meters => {
   if (meters >= 1000) {
     return `${(meters / 1000).toFixed(2)} km`;
   }
@@ -42,7 +42,7 @@ export const formatDistance = (meters) => {
 };
 
 // Format time as HH:MM:SS or MM:SS
-export const formatTime = (seconds) => {
+export const formatTime = seconds => {
   const hrs = Math.floor(seconds / 3600);
   const mins = Math.floor((seconds % 3600) / 60);
   const secs = Math.floor(seconds % 60);
@@ -63,15 +63,20 @@ class LocationService {
   // Request location permissions
   async requestPermissions() {
     try {
-      const { status: foregroundStatus } = await Location.requestForegroundPermissionsAsync();
-      
+      const { status: foregroundStatus } =
+        await Location.requestForegroundPermissionsAsync();
+
       if (foregroundStatus !== 'granted') {
-        return { granted: false, error: 'Foreground location permission denied' };
+        return {
+          granted: false,
+          error: 'Foreground location permission denied',
+        };
       }
 
       // Request background permission for tracking while app is minimized
-      const { status: backgroundStatus } = await Location.requestBackgroundPermissionsAsync();
-      
+      const { status: backgroundStatus } =
+        await Location.requestBackgroundPermissionsAsync();
+
       return {
         granted: true,
         foreground: foregroundStatus === 'granted',
@@ -86,9 +91,11 @@ class LocationService {
   // Check if location permissions are granted
   async checkPermissions() {
     try {
-      const { status: foregroundStatus } = await Location.getForegroundPermissionsAsync();
-      const { status: backgroundStatus } = await Location.getBackgroundPermissionsAsync();
-      
+      const { status: foregroundStatus } =
+        await Location.getForegroundPermissionsAsync();
+      const { status: backgroundStatus } =
+        await Location.getBackgroundPermissionsAsync();
+
       return {
         foreground: foregroundStatus === 'granted',
         background: backgroundStatus === 'granted',
@@ -105,7 +112,7 @@ class LocationService {
       const location = await Location.getCurrentPositionAsync({
         accuracy: Location.Accuracy.BestForNavigation,
       });
-      
+
       return {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
@@ -137,7 +144,7 @@ class LocationService {
     try {
       this.locationSubscription = await Location.watchPositionAsync(
         defaultOptions,
-        (location) => {
+        location => {
           const locationData = {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
@@ -146,14 +153,14 @@ class LocationService {
             speed: location.coords.speed || 0,
             timestamp: location.timestamp,
           };
-          
+
           // Filter out inaccurate readings
           if (locationData.accuracy <= 20) {
             onLocationUpdate(locationData);
           }
         }
       );
-      
+
       this.isTracking = true;
       console.log('Location tracking started');
     } catch (error) {
@@ -175,7 +182,7 @@ class LocationService {
   // Calculate total distance from route points
   calculateTotalDistance(routePoints) {
     if (routePoints.length < 2) return 0;
-    
+
     let totalDistance = 0;
     for (let i = 1; i < routePoints.length; i++) {
       const prev = routePoints[i - 1];
@@ -187,21 +194,22 @@ class LocationService {
         curr.longitude
       );
     }
-    
+
     return totalDistance;
   }
 
   // Calculate average pace from route points
   calculateAveragePace(routePoints) {
     if (routePoints.length < 2) return 0;
-    
+
     const totalDistance = this.calculateTotalDistance(routePoints);
     const firstPoint = routePoints[0];
     const lastPoint = routePoints[routePoints.length - 1];
-    const totalTimeSeconds = (lastPoint.timestamp - firstPoint.timestamp) / 1000;
-    
+    const totalTimeSeconds =
+      (lastPoint.timestamp - firstPoint.timestamp) / 1000;
+
     if (totalTimeSeconds <= 0 || totalDistance <= 0) return 0;
-    
+
     // Average speed in m/s
     const avgSpeed = totalDistance / totalTimeSeconds;
     return calculatePace(avgSpeed);
@@ -212,7 +220,7 @@ class LocationService {
     if (routePoints.length < windowSize + 1) {
       return this.calculateAveragePace(routePoints);
     }
-    
+
     const recentPoints = routePoints.slice(-windowSize - 1);
     return this.calculateAveragePace(recentPoints);
   }

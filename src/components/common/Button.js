@@ -1,5 +1,10 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import {
+  TouchableOpacity,
+  Text,
+  StyleSheet,
+  ActivityIndicator,
+} from 'react-native';
 import { theme } from '../../theme';
 
 const Button = ({
@@ -36,7 +41,11 @@ const Button = ({
       activeOpacity={0.7}
     >
       {loading ? (
-        <ActivityIndicator color={variant === 'primary' ? theme.colors.white : theme.colors.primary} />
+        <ActivityIndicator
+          color={
+            variant === 'primary' ? theme.colors.white : theme.colors.primary
+          }
+        />
       ) : (
         <Text style={textStyles}>{title}</Text>
       )}

@@ -5,10 +5,13 @@ export const authService = {
   signUp: async (email, password, displayName) => {
     try {
       console.log('Starting signup for:', email);
-      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const userCredential = await auth.createUserWithEmailAndPassword(
+        email,
+        password
+      );
       const user = userCredential.user;
       console.log('User created:', user.uid);
-      
+
       // Create user document in Firestore
       await db.collection('users').doc(user.uid).set({
         userId: user.uid,
@@ -36,8 +39,11 @@ export const authService = {
   // Log in with email and password
   login: async (email, password) => {
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      
+      const userCredential = await auth.signInWithEmailAndPassword(
+        email,
+        password
+      );
+
       // Update last login
       await db.collection('users').doc(userCredential.user.uid).update({
         lastLoginAt: firebase.firestore.FieldValue.serverTimestamp(),
@@ -49,7 +55,6 @@ export const authService = {
     }
   },
 
-
   // Log out
   logout: async () => {
     try {
@@ -60,7 +65,7 @@ export const authService = {
   },
 
   // Reset password
-  resetPassword: async (email) => {
+  resetPassword: async email => {
     try {
       await auth.sendPasswordResetEmail(email);
     } catch (error) {
@@ -69,7 +74,7 @@ export const authService = {
   },
 
   // Get user profile
-  getUserProfile: async (userId) => {
+  getUserProfile: async userId => {
     try {
       const userDoc = await db.collection('users').doc(userId).get();
       if (userDoc.exists) {
@@ -79,5 +84,5 @@ export const authService = {
     } catch (error) {
       throw error;
     }
-  }
+  },
 };

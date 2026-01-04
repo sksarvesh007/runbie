@@ -9,8 +9,9 @@ import { authService } from '../../services/auth.service';
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
+  const setUser = useAuthStore(state => state.setUser);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -40,7 +41,6 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
-
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -57,24 +57,26 @@ const LoginScreen = ({ navigation }) => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        
+
         <Input
           label="Password"
           placeholder="Enter your password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={!showPassword}
+          rightIcon={showPassword ? 'eye-off' : 'eye'}
+          onRightIconPress={() => setShowPassword(!showPassword)}
         />
 
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.forgotPassword}
           onPress={() => navigation.navigate('ForgotPassword')}
         >
           <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
         </TouchableOpacity>
 
-        <Button 
-          title="Login" 
+        <Button
+          title="Login"
           onPress={handleLogin}
           loading={isLoading}
           style={styles.loginButton}

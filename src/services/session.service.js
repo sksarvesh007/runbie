@@ -1,18 +1,18 @@
 import { db, auth } from '../config/firebase.config';
 
 // Session document structure
-const createSessionDocument = (sessionData) => ({
+const createSessionDocument = sessionData => ({
   sessionId: sessionData.sessionId || null,
   oderId: sessionData.userId || auth.currentUser?.uid || null,
   userId: sessionData.userId || auth.currentUser?.uid || null,
   status: sessionData.status || 'active', // active, paused, completed, abandoned
-  
+
   // Run settings
   distanceGoal: sessionData.distanceGoal || 0,
   paceMin: sessionData.paceMin || 0,
   paceMax: sessionData.paceMax || 0,
   zombiePace: sessionData.zombiePace || 0,
-  
+
   // Run stats
   distanceRun: sessionData.distanceRun || 0,
   effectiveDistance: sessionData.effectiveDistance || 0,
@@ -21,22 +21,22 @@ const createSessionDocument = (sessionData) => ({
   averagePace: sessionData.averagePace || 0,
   maxPace: sessionData.maxPace || 0,
   minPace: sessionData.minPace || 0,
-  
+
   // Zombie stats
   catchCount: sessionData.catchCount || 0,
   catchEvents: sessionData.catchEvents || [],
   zombieDistance: sessionData.zombieDistance || 0,
-  
+
   // Route data (stored separately for large routes)
   routePointsCount: sessionData.routePointsCount || 0,
   startLocation: sessionData.startLocation || null,
   endLocation: sessionData.endLocation || null,
-  
+
   // Timestamps
   startedAt: sessionData.startedAt || new Date(),
   completedAt: sessionData.completedAt || null,
   lastUpdatedAt: new Date(),
-  
+
   // Completion info
   completionPercentage: sessionData.completionPercentage || 0,
   wasCompleted: sessionData.wasCompleted || false,
@@ -76,7 +76,7 @@ class SessionService {
       });
 
       await db.collection('sessions').doc(sessionId).set(sessionDoc);
-      
+
       console.log('Session started:', sessionId);
       return sessionId;
     } catch (error) {
@@ -112,7 +112,10 @@ class SessionService {
         lastUpdatedAt: new Date(),
       };
 
-      await db.collection('sessions').doc(this.currentSessionId).update(updateData);
+      await db
+        .collection('sessions')
+        .doc(this.currentSessionId)
+        .update(updateData);
       console.log('Session updated:', this.currentSessionId);
     } catch (error) {
       console.error('Failed to update session:', error);
@@ -127,9 +130,13 @@ class SessionService {
         return null;
       }
 
-      const completionPercentage = sessionData.distanceGoal > 0
-        ? Math.min((sessionData.effectiveDistance / sessionData.distanceGoal) * 100, 100)
-        : 0;
+      const completionPercentage =
+        sessionData.distanceGoal > 0
+          ? Math.min(
+              (sessionData.effectiveDistance / sessionData.distanceGoal) * 100,
+              100
+            )
+          : 0;
 
       const finalData = {
         status: 'completed',
@@ -143,21 +150,30 @@ class SessionService {
         catchCount: sessionData.catchCount || 0,
         catchEvents: sessionData.catchEvents || [],
         routePointsCount: routePoints.length,
-        startLocation: routePoints.length > 0 ? {
-          latitude: routePoints[0].latitude,
-          longitude: routePoints[0].longitude,
-        } : null,
-        endLocation: routePoints.length > 0 ? {
-          latitude: routePoints[routePoints.length - 1].latitude,
-          longitude: routePoints[routePoints.length - 1].longitude,
-        } : null,
+        startLocation:
+          routePoints.length > 0
+            ? {
+                latitude: routePoints[0].latitude,
+                longitude: routePoints[0].longitude,
+              }
+            : null,
+        endLocation:
+          routePoints.length > 0
+            ? {
+                latitude: routePoints[routePoints.length - 1].latitude,
+                longitude: routePoints[routePoints.length - 1].longitude,
+              }
+            : null,
         completedAt: new Date(),
         lastUpdatedAt: new Date(),
         completionPercentage,
         wasCompleted: true,
       };
 
-      await db.collection('sessions').doc(this.currentSessionId).update(finalData);
+      await db
+        .collection('sessions')
+        .doc(this.currentSessionId)
+        .update(finalData);
 
       // Store route points in subcollection if there are many
       if (routePoints.length > 0) {
@@ -201,15 +217,18 @@ class SessionService {
     try {
       const chunkSize = 100;
       const chunks = [];
-      
+
       for (let i = 0; i < routePoints.length; i += chunkSize) {
         chunks.push(routePoints.slice(i, i + chunkSize));
       }
 
       const batch = db.batch();
       chunks.forEach((chunk, index) => {
-        const chunkRef = db.collection('sessions').doc(sessionId)
-          .collection('routeChunks').doc(`chunk_${index}`);
+        const chunkRef = db
+          .collection('sessions')
+          .doc(sessionId)
+          .collection('routeChunks')
+          .doc(`chunk_${index}`);
         batch.set(chunkRef, {
           chunkIndex: index,
           points: chunk.map(p => ({
@@ -222,7 +241,9 @@ class SessionService {
       });
 
       await batch.commit();
-      console.log(`Saved ${routePoints.length} route points in ${chunks.length} chunks`);
+      console.log(
+        `Saved ${routePoints.length} route points in ${chunks.length} chunks`
+      );
     } catch (error) {
       console.error('Failed to save route points:', error);
     }
@@ -237,12 +258,13 @@ class SessionService {
       }
 
       // Simple query without orderBy to avoid composite index requirement
-      const snapshot = await db.collection('sessions')
+      const snapshot = await db
+        .collection('sessions')
         .where('oderId', '==', oderId)
         .get();
 
       const sessions = [];
-      
+
       snapshot.forEach(doc => {
         const data = doc.data();
         // Filter to only completed or abandoned sessions
@@ -258,8 +280,10 @@ class SessionService {
 
       // Sort client-side by startedAt descending
       sessions.sort((a, b) => {
-        const dateA = a.startedAt instanceof Date ? a.startedAt : new Date(a.startedAt);
-        const dateB = b.startedAt instanceof Date ? b.startedAt : new Date(b.startedAt);
+        const dateA =
+          a.startedAt instanceof Date ? a.startedAt : new Date(a.startedAt);
+        const dateB =
+          b.startedAt instanceof Date ? b.startedAt : new Date(b.startedAt);
         return dateB - dateA;
       });
 
@@ -281,7 +305,7 @@ class SessionService {
   async getSessionDetails(sessionId) {
     try {
       const doc = await db.collection('sessions').doc(sessionId).get();
-      
+
       if (!doc.exists) {
         throw new Error('Session not found');
       }
@@ -302,7 +326,9 @@ class SessionService {
   // Get route points for a session
   async getRoutePoints(sessionId) {
     try {
-      const snapshot = await db.collection('sessions').doc(sessionId)
+      const snapshot = await db
+        .collection('sessions')
+        .doc(sessionId)
         .collection('routeChunks')
         .orderBy('chunkIndex')
         .get();
@@ -336,7 +362,8 @@ class SessionService {
       }
 
       // Simple query without orderBy to avoid composite index
-      const snapshot = await db.collection('sessions')
+      const snapshot = await db
+        .collection('sessions')
         .where('oderId', '==', oderId)
         .get();
 
@@ -348,7 +375,10 @@ class SessionService {
       let incompleteSession = null;
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (!incompleteSession && (data.status === 'active' || data.status === 'paused')) {
+        if (
+          !incompleteSession &&
+          (data.status === 'active' || data.status === 'paused')
+        ) {
           incompleteSession = {
             id: doc.id,
             ...data,
@@ -373,7 +403,8 @@ class SessionService {
       }
 
       // Simplified query - filter completed sessions client-side
-      const snapshot = await db.collection('sessions')
+      const snapshot = await db
+        .collection('sessions')
         .where('oderId', '==', oderId)
         .get();
 

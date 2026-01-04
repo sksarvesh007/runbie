@@ -7,11 +7,7 @@ export const SUBSCRIPTION_PLANS = {
     name: 'Free',
     price: 0,
     maxSessions: 5,
-    features: [
-      '5 zombie runs',
-      'Basic stats tracking',
-      'Route history',
-    ],
+    features: ['5 zombie runs', 'Basic stats tracking', 'Route history'],
   },
   MONTHLY: {
     id: 'monthly',
@@ -74,12 +70,20 @@ class SubscriptionService {
     try {
       const userId = auth.currentUser?.uid;
       if (!userId) {
-        return { accountType: 'free', sessionsUsed: 0, maxSessions: FREE_SESSION_LIMIT };
+        return {
+          accountType: 'free',
+          sessionsUsed: 0,
+          maxSessions: FREE_SESSION_LIMIT,
+        };
       }
 
       const userDoc = await db.collection('users').doc(userId).get();
       if (!userDoc.exists) {
-        return { accountType: 'free', sessionsUsed: 0, maxSessions: FREE_SESSION_LIMIT };
+        return {
+          accountType: 'free',
+          sessionsUsed: 0,
+          maxSessions: FREE_SESSION_LIMIT,
+        };
       }
 
       const userData = userDoc.data();
@@ -93,7 +97,11 @@ class SubscriptionService {
       };
     } catch (error) {
       console.error('Failed to get subscription status:', error);
-      return { accountType: 'free', sessionsUsed: 0, maxSessions: FREE_SESSION_LIMIT };
+      return {
+        accountType: 'free',
+        sessionsUsed: 0,
+        maxSessions: FREE_SESSION_LIMIT,
+      };
     }
   }
 
@@ -101,9 +109,12 @@ class SubscriptionService {
   async canStartSession() {
     try {
       const status = await this.getSubscriptionStatus();
-      
+
       // Premium users have unlimited sessions
-      if (status.accountType === 'premium' || status.accountType === 'lifetime') {
+      if (
+        status.accountType === 'premium' ||
+        status.accountType === 'lifetime'
+      ) {
         return { allowed: true, remaining: -1 };
       }
 
@@ -128,12 +139,15 @@ class SubscriptionService {
       if (!userId) return;
 
       const status = await this.getSubscriptionStatus();
-      
+
       // Only increment for free users
       if (status.accountType === 'free') {
-        await db.collection('users').doc(userId).update({
-          sessionsUsed: (status.sessionsUsed || 0) + 1,
-        });
+        await db
+          .collection('users')
+          .doc(userId)
+          .update({
+            sessionsUsed: (status.sessionsUsed || 0) + 1,
+          });
       }
     } catch (error) {
       console.error('Failed to increment session count:', error);
@@ -201,7 +215,7 @@ class SubscriptionService {
   async checkSubscriptionExpiry() {
     try {
       const status = await this.getSubscriptionStatus();
-      
+
       if (status.accountType === 'lifetime') {
         return { expired: false };
       }

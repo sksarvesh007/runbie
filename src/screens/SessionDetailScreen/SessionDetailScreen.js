@@ -7,7 +7,11 @@ import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import { RunMap } from '../../components/map';
 import { sessionService } from '../../services/session.service';
-import { formatDistance, formatTime, formatPace } from '../../services/location.service';
+import {
+  formatDistance,
+  formatTime,
+  formatPace,
+} from '../../services/location.service';
 
 const SessionDetailScreen = ({ route, navigation }) => {
   const { sessionId } = route.params || {};
@@ -37,7 +41,7 @@ const SessionDetailScreen = ({ route, navigation }) => {
     }
   };
 
-  const formatDate = (date) => {
+  const formatDate = date => {
     if (!date) return '';
     const d = new Date(date);
     return d.toLocaleDateString('en-US', {
@@ -54,12 +58,15 @@ const SessionDetailScreen = ({ route, navigation }) => {
     if (!session) return;
 
     try {
-      const message = `🏃 Run completed!\n\n` +
+      const message =
+        `🏃 Run completed!\n\n` +
         `📏 Distance: ${formatDistance(session.effectiveDistance || 0)}\n` +
         `⏱️ Time: ${formatTime(session.elapsedTime || 0)}\n` +
         `⚡ Pace: ${formatPace(session.averagePace || 0)} min/km\n` +
         `🎯 Goal: ${(session.completionPercentage || 0).toFixed(0)}% completed\n` +
-        (session.catchCount > 0 ? `🧟 Caught ${session.catchCount} times\n` : '') +
+        (session.catchCount > 0
+          ? `🧟 Caught ${session.catchCount} times\n`
+          : '') +
         `\n#Runbie #ZombieRun`;
 
       await Share.share({ message });
@@ -82,7 +89,9 @@ const SessionDetailScreen = ({ route, navigation }) => {
   }
 
   const getStatusColor = () => {
-    return session.status === 'completed' ? theme.colors.success : theme.colors.error;
+    return session.status === 'completed'
+      ? theme.colors.success
+      : theme.colors.error;
   };
 
   return (
@@ -90,7 +99,12 @@ const SessionDetailScreen = ({ route, navigation }) => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.date}>{formatDate(session.startedAt)}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor() + '20' }]}>
+        <View
+          style={[
+            styles.statusBadge,
+            { backgroundColor: getStatusColor() + '20' },
+          ]}
+        >
           <Text style={[styles.statusText, { color: getStatusColor() }]}>
             {session.status === 'completed' ? '✓ Completed' : '✗ Abandoned'}
           </Text>
@@ -114,18 +128,36 @@ const SessionDetailScreen = ({ route, navigation }) => {
       <Card style={styles.statsCard}>
         <View style={styles.mainStats}>
           <View style={styles.mainStat}>
-            <Ionicons name="speedometer-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.mainStatValue}>{formatDistance(session.effectiveDistance || 0)}</Text>
+            <Ionicons
+              name="speedometer-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.mainStatValue}>
+              {formatDistance(session.effectiveDistance || 0)}
+            </Text>
             <Text style={styles.mainStatLabel}>Distance</Text>
           </View>
           <View style={styles.mainStat}>
-            <Ionicons name="time-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.mainStatValue}>{formatTime(session.elapsedTime || 0)}</Text>
+            <Ionicons
+              name="time-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.mainStatValue}>
+              {formatTime(session.elapsedTime || 0)}
+            </Text>
             <Text style={styles.mainStatLabel}>Duration</Text>
           </View>
           <View style={styles.mainStat}>
-            <Ionicons name="flash-outline" size={24} color={theme.colors.primary} />
-            <Text style={styles.mainStatValue}>{formatPace(session.averagePace || 0)}</Text>
+            <Ionicons
+              name="flash-outline"
+              size={24}
+              color={theme.colors.primary}
+            />
+            <Text style={styles.mainStatValue}>
+              {formatPace(session.averagePace || 0)}
+            </Text>
             <Text style={styles.mainStatLabel}>Avg Pace</Text>
           </View>
         </View>
@@ -136,15 +168,18 @@ const SessionDetailScreen = ({ route, navigation }) => {
         <Text style={styles.cardTitle}>Goal Progress</Text>
         <View style={styles.progressContainer}>
           <View style={styles.progressBar}>
-            <View 
+            <View
               style={[
-                styles.progressFill, 
-                { width: `${Math.min(session.completionPercentage || 0, 100)}%` }
-              ]} 
+                styles.progressFill,
+                {
+                  width: `${Math.min(session.completionPercentage || 0, 100)}%`,
+                },
+              ]}
             />
           </View>
           <Text style={styles.progressText}>
-            {(session.completionPercentage || 0).toFixed(1)}% of {formatDistance(session.distanceGoal || 0)}
+            {(session.completionPercentage || 0).toFixed(1)}% of{' '}
+            {formatDistance(session.distanceGoal || 0)}
           </Text>
         </View>
       </Card>
@@ -154,17 +189,23 @@ const SessionDetailScreen = ({ route, navigation }) => {
         <Text style={styles.cardTitle}>🧟 Zombie Stats</Text>
         <View style={styles.zombieStats}>
           <View style={styles.zombieStat}>
-            <Text style={styles.zombieStatValue}>{session.catchCount || 0}</Text>
+            <Text style={styles.zombieStatValue}>
+              {session.catchCount || 0}
+            </Text>
             <Text style={styles.zombieStatLabel}>Times Caught</Text>
           </View>
           <View style={styles.zombieStat}>
-            <Text style={[styles.zombieStatValue, { color: theme.colors.error }]}>
+            <Text
+              style={[styles.zombieStatValue, { color: theme.colors.error }]}
+            >
               {formatDistance(session.totalDistanceEaten || 0)}
             </Text>
             <Text style={styles.zombieStatLabel}>Distance Eaten</Text>
           </View>
           <View style={styles.zombieStat}>
-            <Text style={styles.zombieStatValue}>{formatPace(session.zombiePace || 0)}</Text>
+            <Text style={styles.zombieStatValue}>
+              {formatPace(session.zombiePace || 0)}
+            </Text>
             <Text style={styles.zombieStatLabel}>Zombie Pace</Text>
           </View>
         </View>
@@ -176,11 +217,15 @@ const SessionDetailScreen = ({ route, navigation }) => {
         <View style={styles.paceStats}>
           <View style={styles.paceStat}>
             <Text style={styles.paceLabel}>Target Min</Text>
-            <Text style={styles.paceValue}>{formatPace(session.paceMin || 0)}</Text>
+            <Text style={styles.paceValue}>
+              {formatPace(session.paceMin || 0)}
+            </Text>
           </View>
           <View style={styles.paceStat}>
             <Text style={styles.paceLabel}>Target Max</Text>
-            <Text style={styles.paceValue}>{formatPace(session.paceMax || 0)}</Text>
+            <Text style={styles.paceValue}>
+              {formatPace(session.paceMax || 0)}
+            </Text>
           </View>
           <View style={styles.paceStat}>
             <Text style={styles.paceLabel}>Average</Text>
@@ -213,7 +258,14 @@ const SessionDetailScreen = ({ route, navigation }) => {
         title="Share Run"
         onPress={handleShare}
         style={styles.shareButton}
-        icon={<Ionicons name="share-outline" size={20} color="#FFF" style={{ marginRight: 8 }} />}
+        icon={
+          <Ionicons
+            name="share-outline"
+            size={20}
+            color="#FFF"
+            style={{ marginRight: 8 }}
+          />
+        }
       />
     </ScrollView>
   );

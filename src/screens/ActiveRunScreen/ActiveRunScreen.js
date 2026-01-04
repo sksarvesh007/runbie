@@ -1,10 +1,24 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, SafeAreaView, TouchableOpacity, Vibration } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Alert,
+  SafeAreaView,
+  TouchableOpacity,
+  Vibration,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import Button from '../../components/common/Button';
 import { RunMap } from '../../components/map';
-import { locationService, formatDistance, formatPace, formatTime, calculateDistance } from '../../services/location.service';
+import {
+  locationService,
+  formatDistance,
+  formatPace,
+  formatTime,
+  calculateDistance,
+} from '../../services/location.service';
 import { zombieService, ZOMBIE_CONSTANTS } from '../../services/zombie.service';
 import { sessionService } from '../../services/session.service';
 import useSessionStore from '../../store/sessionStore';
@@ -16,7 +30,7 @@ const ActiveRunScreen = ({ navigation }) => {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const timerRef = useRef(null);
   const startTimeRef = useRef(null);
-  
+
   const {
     currentSession,
     isRunning,
@@ -110,7 +124,10 @@ const ActiveRunScreen = ({ navigation }) => {
       const state = useSessionStore.getState();
       sessionService.updateSession({
         distanceRun: state.distanceRun,
-        effectiveDistance: Math.max(0, state.distanceRun - state.totalDistanceEaten),
+        effectiveDistance: Math.max(
+          0,
+          state.distanceRun - state.totalDistanceEaten
+        ),
         totalDistanceEaten: state.totalDistanceEaten,
         elapsedTime: state.elapsedTime,
         currentPace: state.currentPace,
@@ -130,7 +147,10 @@ const ActiveRunScreen = ({ navigation }) => {
       startTimeRef.current = Date.now();
     } catch (error) {
       console.error('Failed to start tracking:', error);
-      Alert.alert('Error', 'Failed to start GPS tracking. Please check your location settings.');
+      Alert.alert(
+        'Error',
+        'Failed to start GPS tracking. Please check your location settings.'
+      );
     }
   };
 
@@ -139,12 +159,30 @@ const ActiveRunScreen = ({ navigation }) => {
     setIsTracking(false);
   };
 
+  /*
+   * Timer Logic using Timestamp Delta
+   * This ensures the timer remains accurate even if the app goes to the background
+   * or the interval execution is paused/throttled by the OS.
+   */
+  const lastResumeTimeRef = useRef(null);
+  const elapsedTimeAtResumeRef = useRef(0);
+
   const startTimer = () => {
     if (timerRef.current) return;
-    
+
+    // Capture the exact time we started/resumed and the elapsed time at that moment
+    lastResumeTimeRef.current = Date.now();
+    elapsedTimeAtResumeRef.current = useSessionStore.getState().elapsedTime;
+
     timerRef.current = setInterval(() => {
       if (!isPaused) {
-        updateElapsedTime(useSessionStore.getState().elapsedTime + 1);
+        const now = Date.now();
+        // Calculate seconds passed since resume
+        const deltaSeconds = Math.floor(
+          (now - lastResumeTimeRef.current) / 1000
+        );
+        // Update store with total elapsed time
+        updateElapsedTime(elapsedTimeAtResumeRef.current + deltaSeconds);
       }
     }, 1000);
   };
@@ -156,31 +194,40 @@ const ActiveRunScreen = ({ navigation }) => {
     }
   };
 
-  const handleLocationUpdate = useCallback((location) => {
-    if (isPaused) return;
+  const handleLocationUpdate = useCallback(
+    location => {
+      if (isPaused) return;
 
-    setCurrentLocation(location);
-    
-    const newPoint = {
-      latitude: location.latitude,
-      longitude: location.longitude,
-      timestamp: location.timestamp,
-      speed: location.speed,
-    };
-    
-    addRoutePoint(newPoint);
+      setCurrentLocation(location);
 
-    // Calculate distance from previous point
-    const points = useSessionStore.getState().routePoints;
-    if (points.length >= 2) {
-      const totalDistance = locationService.calculateTotalDistance([...points, newPoint]);
-      updateDistance(totalDistance);
-      
-      // Calculate current pace using smoothed average
-      const smoothedPace = locationService.getSmoothedPace([...points, newPoint]);
-      updatePace(smoothedPace);
-    }
-  }, [isPaused]);
+      const newPoint = {
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: location.timestamp,
+        speed: location.speed,
+      };
+
+      addRoutePoint(newPoint);
+
+      // Calculate distance from previous point
+      const points = useSessionStore.getState().routePoints;
+      if (points.length >= 2) {
+        const totalDistance = locationService.calculateTotalDistance([
+          ...points,
+          newPoint,
+        ]);
+        updateDistance(totalDistance);
+
+        // Calculate current pace using smoothed average
+        const smoothedPace = locationService.getSmoothedPace([
+          ...points,
+          newPoint,
+        ]);
+        updatePace(smoothedPace);
+      }
+    },
+    [isPaused]
+  );
 
   const updateZombiePosition = () => {
     if (!currentSession) return;
@@ -188,18 +235,27 @@ const ActiveRunScreen = ({ navigation }) => {
     const state = useSessionStore.getState();
     const { zombiePace } = currentSession;
     const elapsed = state.elapsedTime;
-    
+
     // Calculate zombie distance using zombie service
-    const zombieDistanceCovered = zombieService.calculateZombieDistance(elapsed, zombiePace);
+    const zombieDistanceCovered = zombieService.calculateZombieDistance(
+      elapsed,
+      zombiePace
+    );
     updateZombieDistance(zombieDistanceCovered);
-    
+
     // Calculate gap (positive = user ahead)
-    const gap = zombieService.calculateGap(state.distanceRun, zombieDistanceCovered);
+    const gap = zombieService.calculateGap(
+      state.distanceRun,
+      zombieDistanceCovered
+    );
     updateZombieGap(gap);
 
     // Calculate zombie's position on the route
     if (state.routePoints.length > 1) {
-      const zombiePos = zombieService.getZombiePositionOnRoute(state.routePoints, zombieDistanceCovered);
+      const zombiePos = zombieService.getZombiePositionOnRoute(
+        state.routePoints,
+        zombieDistanceCovered
+      );
       if (zombiePos) {
         setZombieLocation(zombiePos);
       }
@@ -230,7 +286,7 @@ const ActiveRunScreen = ({ navigation }) => {
         Vibration.vibrate([0, 500, 200, 500, 200, 500]);
         Alert.alert(
           '🧟 CAUGHT!',
-          'The zombie caught you! It\'s eating your distance! Run faster to escape!',
+          "The zombie caught you! It's eating your distance! Run faster to escape!",
           [{ text: 'RUN!', style: 'destructive' }]
         );
       }
@@ -244,31 +300,33 @@ const ActiveRunScreen = ({ navigation }) => {
   // Get position at a specific distance along the route
   const getPositionAtDistance = (points, targetDistance) => {
     if (points.length < 2) return points[0] || null;
-    
+
     let accumulatedDistance = 0;
-    
+
     for (let i = 1; i < points.length; i++) {
       const prev = points[i - 1];
       const curr = points[i];
       const segmentDistance = calculateDistance(
-        prev.latitude, prev.longitude,
-        curr.latitude, curr.longitude
+        prev.latitude,
+        prev.longitude,
+        curr.latitude,
+        curr.longitude
       );
-      
+
       if (accumulatedDistance + segmentDistance >= targetDistance) {
         // Interpolate position within this segment
         const remainingDistance = targetDistance - accumulatedDistance;
         const ratio = remainingDistance / segmentDistance;
-        
+
         return {
           latitude: prev.latitude + (curr.latitude - prev.latitude) * ratio,
           longitude: prev.longitude + (curr.longitude - prev.longitude) * ratio,
         };
       }
-      
+
       accumulatedDistance += segmentDistance;
     }
-    
+
     // If target distance exceeds route, return last point
     return points[points.length - 1];
   };
@@ -282,45 +340,47 @@ const ActiveRunScreen = ({ navigation }) => {
   };
 
   const handleStopRun = () => {
-    Alert.alert(
-      'End Run',
-      'Are you sure you want to end this run?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'End Run',
-          style: 'destructive',
-          onPress: async () => {
-            stopTracking();
-            stopTimer();
-            
-            // Save session to Firestore
-            const state = useSessionStore.getState();
-            try {
-              await sessionService.completeSession({
+    Alert.alert('End Run', 'Are you sure you want to end this run?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'End Run',
+        style: 'destructive',
+        onPress: async () => {
+          stopTracking();
+          stopTimer();
+
+          // Save session to Firestore
+          const state = useSessionStore.getState();
+          try {
+            await sessionService.completeSession(
+              {
                 distanceRun: state.distanceRun,
-                effectiveDistance: Math.max(0, state.distanceRun - state.totalDistanceEaten),
+                effectiveDistance: Math.max(
+                  0,
+                  state.distanceRun - state.totalDistanceEaten
+                ),
                 totalDistanceEaten: state.totalDistanceEaten,
                 elapsedTime: state.elapsedTime,
                 averagePace: state.currentPace,
                 catchCount: state.catchCount,
                 catchEvents: state.catchEvents,
                 distanceGoal: state.currentSession?.distanceGoal || 0,
-              }, state.routePoints);
-            } catch (error) {
-              console.error('Failed to save session:', error);
-            }
-            
-            stopSession();
-            // Navigate back to home
-            navigation.reset({
-              index: 0,
-              routes: [{ name: 'HomeMain' }],
-            });
-          },
+              },
+              state.routePoints
+            );
+          } catch (error) {
+            console.error('Failed to save session:', error);
+          }
+
+          stopSession();
+          // Navigate back to home
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'HomeMain' }],
+          });
         },
-      ]
-    );
+      },
+    ]);
   };
 
   const getZombieStatusDisplay = () => {
@@ -339,7 +399,9 @@ const ActiveRunScreen = ({ navigation }) => {
 
   const zombieStatus = getZombieStatusDisplay();
   const effectiveDistance = Math.max(0, distanceRun - totalDistanceEaten);
-  const progress = currentSession ? Math.min((effectiveDistance / currentSession.distanceGoal) * 100, 100) : 0;
+  const progress = currentSession
+    ? Math.min((effectiveDistance / currentSession.distanceGoal) * 100, 100)
+    : 0;
 
   // Render expanded map view
   if (isMapExpanded) {
@@ -354,7 +416,7 @@ const ActiveRunScreen = ({ navigation }) => {
           followUser={true}
           style={styles.expandedMap}
         />
-        
+
         {/* Floating Stats */}
         <View style={styles.floatingStats}>
           <View style={styles.floatingStat}>
@@ -362,7 +424,9 @@ const ActiveRunScreen = ({ navigation }) => {
             <Text style={styles.floatingLabel}>Time</Text>
           </View>
           <View style={styles.floatingStat}>
-            <Text style={styles.floatingValue}>{formatDistance(distanceRun)}</Text>
+            <Text style={styles.floatingValue}>
+              {formatDistance(distanceRun)}
+            </Text>
             <Text style={styles.floatingLabel}>Distance</Text>
           </View>
           <View style={styles.floatingStat}>
@@ -382,10 +446,17 @@ const ActiveRunScreen = ({ navigation }) => {
         {/* Control Buttons */}
         <View style={styles.floatingControls}>
           <TouchableOpacity
-            style={[styles.floatingControlBtn, isPaused && styles.floatingControlBtnActive]}
+            style={[
+              styles.floatingControlBtn,
+              isPaused && styles.floatingControlBtnActive,
+            ]}
             onPress={handlePauseResume}
           >
-            <Ionicons name={isPaused ? 'play' : 'pause'} size={28} color={isPaused ? '#FFF' : theme.colors.primary} />
+            <Ionicons
+              name={isPaused ? 'play' : 'pause'}
+              size={28}
+              color={isPaused ? '#FFF' : theme.colors.primary}
+            />
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.floatingControlBtn, styles.floatingStopBtn]}
@@ -408,7 +479,7 @@ const ActiveRunScreen = ({ navigation }) => {
       </View>
 
       {/* Map Preview */}
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.mapPreview}
         onPress={() => setIsMapExpanded(true)}
         activeOpacity={0.9}
@@ -430,13 +501,17 @@ const ActiveRunScreen = ({ navigation }) => {
       {/* Main Stats */}
       <View style={styles.mainStats}>
         <View style={styles.statBox}>
-          <Text style={styles.statValue}>{formatDistance(effectiveDistance)}</Text>
+          <Text style={styles.statValue}>
+            {formatDistance(effectiveDistance)}
+          </Text>
           <Text style={styles.statLabel}>Effective Distance</Text>
           {totalDistanceEaten > 0 && (
-            <Text style={styles.eatenText}>-{formatDistance(totalDistanceEaten)} eaten</Text>
+            <Text style={styles.eatenText}>
+              -{formatDistance(totalDistanceEaten)} eaten
+            </Text>
           )}
         </View>
-        
+
         <View style={styles.statBox}>
           <Text style={styles.statValue}>{formatPace(currentPace)}</Text>
           <Text style={styles.statLabel}>Pace (min/km)</Text>
@@ -449,20 +524,38 @@ const ActiveRunScreen = ({ navigation }) => {
           <View style={[styles.progressFill, { width: `${progress}%` }]} />
         </View>
         <Text style={styles.progressText}>
-          {progress.toFixed(0)}% of {formatDistance(currentSession?.distanceGoal || 0)}
+          {progress.toFixed(0)}% of{' '}
+          {formatDistance(currentSession?.distanceGoal || 0)}
         </Text>
       </View>
 
       {/* Zombie Status */}
-      <View style={[styles.zombieStatusBar, { backgroundColor: zombieStatus.color + '20', borderColor: zombieStatus.color }, isCaught && styles.caughtStatusBar]}>
+      <View
+        style={[
+          styles.zombieStatusBar,
+          {
+            backgroundColor: zombieStatus.color + '20',
+            borderColor: zombieStatus.color,
+          },
+          isCaught && styles.caughtStatusBar,
+        ]}
+      >
         <Text style={styles.zombieEmoji}>{zombieStatus.emoji}</Text>
         <View style={styles.zombieStatusInfo}>
-          <Text style={[styles.zombieStatusText, { color: zombieStatus.color }]}>{zombieStatus.text}</Text>
+          <Text
+            style={[styles.zombieStatusText, { color: zombieStatus.color }]}
+          >
+            {zombieStatus.text}
+          </Text>
           <Text style={styles.zombieDistanceText}>
-            {zombieGap > 0 ? `+${Math.round(zombieGap)}m ahead` : `${Math.abs(Math.round(zombieGap))}m behind`}
+            {zombieGap > 0
+              ? `+${Math.round(zombieGap)}m ahead`
+              : `${Math.abs(Math.round(zombieGap))}m behind`}
           </Text>
           {catchCount > 0 && (
-            <Text style={styles.catchCountText}>Caught {catchCount} time{catchCount > 1 ? 's' : ''}</Text>
+            <Text style={styles.catchCountText}>
+              Caught {catchCount} time{catchCount > 1 ? 's' : ''}
+            </Text>
           )}
         </View>
         {isCaught && (
@@ -490,7 +583,16 @@ const ActiveRunScreen = ({ navigation }) => {
 
       {/* GPS Status */}
       <View style={styles.gpsStatus}>
-        <View style={[styles.gpsIndicator, { backgroundColor: isTracking ? theme.colors.success : theme.colors.error }]} />
+        <View
+          style={[
+            styles.gpsIndicator,
+            {
+              backgroundColor: isTracking
+                ? theme.colors.success
+                : theme.colors.error,
+            },
+          ]}
+        />
         <Text style={styles.gpsText}>
           {isTracking ? 'GPS Active' : 'GPS Inactive'}
         </Text>

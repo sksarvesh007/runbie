@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
@@ -19,24 +19,30 @@ const RunMap = ({
   // Center map on user when location updates
   useEffect(() => {
     if (isFollowing && currentLocation && mapRef.current) {
-      mapRef.current.animateToRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      }, 500);
+      mapRef.current.animateToRegion(
+        {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        500
+      );
     }
   }, [currentLocation, isFollowing]);
 
   const handleCenterOnUser = () => {
     if (currentLocation && mapRef.current) {
       setIsFollowing(true);
-      mapRef.current.animateToRegion({
-        latitude: currentLocation.latitude,
-        longitude: currentLocation.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
-      }, 500);
+      mapRef.current.animateToRegion(
+        {
+          latitude: currentLocation.latitude,
+          longitude: currentLocation.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        500
+      );
     }
   };
 
@@ -63,7 +69,7 @@ const RunMap = ({
     // Default to a generic location if no current location
     return {
       latitude: 28.6139,
-      longitude: 77.2090,
+      longitude: 77.209,
       latitudeDelta: 0.01,
       longitudeDelta: 0.01,
     };
@@ -109,44 +115,51 @@ const RunMap = ({
           />
         )}
 
-        {/* User Marker */}
+        {/* User Marker (3D) */}
         {currentLocation && (
           <Marker
             coordinate={{
               latitude: currentLocation.latitude,
               longitude: currentLocation.longitude,
             }}
+            width={60}
+            height={60}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={styles.userMarker}>
-              <View style={styles.userMarkerInner}>
-                <Ionicons name="person" size={16} color="#FFFFFF" />
-              </View>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../../assets/runner_3d.png')}
+                style={styles.markerImage}
+                resizeMode="contain"
+              />
             </View>
           </Marker>
         )}
 
-        {/* Zombie Marker */}
+        {/* Zombie Marker (3D) */}
         {showZombie && zombiePos && (
           <Marker
             coordinate={{
               latitude: zombiePos.latitude,
               longitude: zombiePos.longitude,
             }}
+            width={60}
+            height={60}
             anchor={{ x: 0.5, y: 0.5 }}
           >
-            <View style={[styles.zombieMarker, { backgroundColor: getZombieColor() }]}>
-              <Text style={styles.zombieEmoji}>🧟</Text>
+            <View style={styles.imageContainer}>
+              <Image
+                source={require('../../../assets/zombie_3d.png')}
+                style={styles.markerImage}
+                resizeMode="contain"
+              />
             </View>
           </Marker>
         )}
 
         {/* Start Point Marker */}
         {routeCoordinates.length > 0 && (
-          <Marker
-            coordinate={routeCoordinates[0]}
-            anchor={{ x: 0.5, y: 1 }}
-          >
+          <Marker coordinate={routeCoordinates[0]} anchor={{ x: 0.5, y: 1 }}>
             <View style={styles.startMarker}>
               <Ionicons name="flag" size={20} color={theme.colors.success} />
             </View>
@@ -157,7 +170,10 @@ const RunMap = ({
       {/* Map Controls */}
       <View style={styles.controls}>
         <TouchableOpacity
-          style={[styles.controlButton, isFollowing && styles.controlButtonActive]}
+          style={[
+            styles.controlButton,
+            isFollowing && styles.controlButtonActive,
+          ]}
           onPress={handleCenterOnUser}
         >
           <Ionicons
@@ -170,11 +186,16 @@ const RunMap = ({
 
       {/* Zombie Distance Overlay */}
       {showZombie && (
-        <View style={[styles.zombieOverlay, { backgroundColor: getZombieColor() + '20' }]}>
+        <View
+          style={[
+            styles.zombieOverlay,
+            { backgroundColor: getZombieColor() + '20' },
+          ]}
+        >
           <Text style={styles.zombieOverlayEmoji}>🧟</Text>
           <Text style={[styles.zombieOverlayText, { color: getZombieColor() }]}>
-            {zombieDistance > 0 
-              ? `${Math.round(zombieDistance)}m ahead` 
+            {zombieDistance > 0
+              ? `${Math.round(zombieDistance)}m ahead`
               : `${Math.abs(Math.round(zombieDistance))}m behind!`}
           </Text>
         </View>
@@ -218,6 +239,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+  },
+  imageContainer: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  markerImage: {
+    width: 50,
+    height: 50,
   },
   zombieEmoji: {
     fontSize: 24,

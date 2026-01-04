@@ -1,5 +1,12 @@
 import React from 'react';
-import { View, TextInput, Text, StyleSheet } from 'react-native';
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 
 const Input = ({
@@ -12,21 +19,34 @@ const Input = ({
   error,
   style,
   inputStyle,
+  rightIcon,
+  onRightIconPress,
   ...props
 }) => {
   return (
     <View style={[styles.container, style]}>
       {label && <Text style={styles.label}>{label}</Text>}
-      <TextInput
-        style={[styles.input, error && styles.inputError, inputStyle]}
-        value={value}
-        onChangeText={onChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={theme.colors.gray[400]}
-        secureTextEntry={secureTextEntry}
-        keyboardType={keyboardType}
-        {...props}
-      />
+      <View style={[styles.inputContainer, error && styles.inputError]}>
+        <TextInput
+          style={[styles.input, inputStyle]}
+          value={value}
+          onChangeText={onChangeText}
+          placeholder={placeholder}
+          placeholderTextColor={theme.colors.gray[400]}
+          secureTextEntry={secureTextEntry}
+          keyboardType={keyboardType}
+          {...props}
+        />
+        {rightIcon && (
+          <TouchableOpacity onPress={onRightIconPress} style={styles.rightIcon}>
+            <MaterialCommunityIcons
+              name={rightIcon}
+              size={24}
+              color={theme.colors.gray[500]}
+            />
+          </TouchableOpacity>
+        )}
+      </View>
       {error && <Text style={styles.errorText}>{error}</Text>}
     </View>
   );
@@ -42,18 +62,26 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
     fontWeight: '600',
   },
-  input: {
-    ...theme.typography.body1,
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     backgroundColor: theme.colors.white,
     borderWidth: 1,
     borderColor: theme.colors.border,
     borderRadius: theme.borderRadius.md,
     paddingHorizontal: theme.spacing.md,
+  },
+  input: {
+    ...theme.typography.body1,
+    flex: 1,
     paddingVertical: theme.spacing.sm,
     color: theme.colors.text,
   },
   inputError: {
     borderColor: theme.colors.error,
+  },
+  rightIcon: {
+    marginLeft: theme.spacing.sm,
   },
   errorText: {
     ...theme.typography.caption,

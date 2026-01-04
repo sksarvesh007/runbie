@@ -1,5 +1,12 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert, ScrollView } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+  ScrollView,
+} from 'react-native';
 import { theme } from '../../theme';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -11,8 +18,10 @@ const SignupScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const setUser = useAuthStore((state) => state.setUser);
+  const setUser = useAuthStore(state => state.setUser);
 
   const handleSignup = async () => {
     if (!displayName || !email || !password || !confirmPassword) {
@@ -85,13 +94,15 @@ const SignupScreen = ({ navigation }) => {
           keyboardType="email-address"
           autoCapitalize="none"
         />
-        
+
         <Input
           label="Password"
           placeholder="Create a password"
           value={password}
           onChangeText={setPassword}
-          secureTextEntry
+          secureTextEntry={!showPassword}
+          rightIcon={showPassword ? 'eye-off' : 'eye'}
+          onRightIconPress={() => setShowPassword(!showPassword)}
         />
 
         <Input
@@ -99,11 +110,13 @@ const SignupScreen = ({ navigation }) => {
           placeholder="Confirm your password"
           value={confirmPassword}
           onChangeText={setConfirmPassword}
-          secureTextEntry
+          secureTextEntry={!showConfirmPassword}
+          rightIcon={showConfirmPassword ? 'eye-off' : 'eye'}
+          onRightIconPress={() => setShowConfirmPassword(!showConfirmPassword)}
         />
 
-        <Button 
-          title="Sign Up" 
+        <Button
+          title="Sign Up"
           onPress={handleSignup}
           loading={isLoading}
           style={styles.signupButton}

@@ -40,16 +40,19 @@ See [TODO.md](./TODO.md) for detailed development progress.
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 cd runbie
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Create environment file:
+
 ```bash
 cp .env.example .env
 ```
@@ -57,11 +60,13 @@ cp .env.example .env
 4. Add your API keys to `.env` file
 
 5. Start the development server:
+
 ```bash
 npm start
 ```
 
 6. Run on iOS or Android:
+
 ```bash
 npm run ios
 # or

@@ -1,19 +1,29 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import Button from '../../components/common/Button';
 import Card from '../../components/common/Card';
 import Loading from '../../components/common/Loading';
-import { subscriptionService, SUBSCRIPTION_PLANS } from '../../services/subscription.service';
+import {
+  subscriptionService,
+  SUBSCRIPTION_PLANS,
+} from '../../services/subscription.service';
 import useAuthStore from '../../store/authStore';
 
 const SubscriptionScreen = ({ navigation }) => {
   const [selectedPlan, setSelectedPlan] = useState('yearly');
   const [isLoading, setIsLoading] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState(null);
-  const user = useAuthStore((state) => state.user);
-  const setUser = useAuthStore((state) => state.setUser);
+  const user = useAuthStore(state => state.user);
+  const setUser = useAuthStore(state => state.setUser);
 
   useEffect(() => {
     loadSubscriptionStatus();
@@ -24,13 +34,13 @@ const SubscriptionScreen = ({ navigation }) => {
     setSubscriptionStatus(status);
   };
 
-  const handlePurchase = async (planId) => {
+  const handlePurchase = async planId => {
     if (planId === 'free') return;
 
     setIsLoading(true);
     try {
       const plan = SUBSCRIPTION_PLANS[planId.toUpperCase()];
-      
+
       // For now, simulate payment success
       // In production, integrate with Razorpay here
       Alert.alert(
@@ -48,7 +58,7 @@ const SubscriptionScreen = ({ navigation }) => {
                   `pay_simulated_${Date.now()}`,
                   `order_simulated_${Date.now()}`
                 );
-                
+
                 // Update user state
                 setUser({
                   ...user,
@@ -63,7 +73,10 @@ const SubscriptionScreen = ({ navigation }) => {
                   [{ text: 'Awesome!', onPress: () => navigation.goBack() }]
                 );
               } catch (error) {
-                Alert.alert('Error', 'Failed to activate subscription. Please try again.');
+                Alert.alert(
+                  'Error',
+                  'Failed to activate subscription. Please try again.'
+                );
               }
             },
           },
@@ -77,13 +90,14 @@ const SubscriptionScreen = ({ navigation }) => {
     }
   };
 
-  const isPremium = subscriptionStatus?.accountType === 'premium' || 
-                    subscriptionStatus?.accountType === 'lifetime';
+  const isPremium =
+    subscriptionStatus?.accountType === 'premium' ||
+    subscriptionStatus?.accountType === 'lifetime';
 
   const renderPlanCard = (plan, planKey) => {
     const isSelected = selectedPlan === plan.id;
     const isCurrent = subscriptionStatus?.subscriptionPlan === plan.id;
-    
+
     if (plan.id === 'free') return null;
 
     return (
@@ -92,24 +106,30 @@ const SubscriptionScreen = ({ navigation }) => {
         onPress={() => setSelectedPlan(plan.id)}
         activeOpacity={0.8}
       >
-        <Card style={[
-          styles.planCard,
-          isSelected && styles.planCardSelected,
-          isCurrent && styles.planCardCurrent,
-        ]}>
+        <Card
+          style={[
+            styles.planCard,
+            isSelected && styles.planCardSelected,
+            isCurrent && styles.planCardCurrent,
+          ]}
+        >
           {plan.savings && (
             <View style={styles.savingsBadge}>
               <Text style={styles.savingsText}>{plan.savings}</Text>
             </View>
           )}
-          
+
           <Text style={styles.planName}>{plan.name}</Text>
           <Text style={styles.planPrice}>{plan.priceDisplay}</Text>
-          
+
           <View style={styles.featuresContainer}>
             {plan.features.map((feature, index) => (
               <View key={index} style={styles.featureRow}>
-                <Ionicons name="checkmark-circle" size={18} color={theme.colors.success} />
+                <Ionicons
+                  name="checkmark-circle"
+                  size={18}
+                  color={theme.colors.success}
+                />
                 <Text style={styles.featureText}>{feature}</Text>
               </View>
             ))}
@@ -120,7 +140,12 @@ const SubscriptionScreen = ({ navigation }) => {
               <Text style={styles.currentText}>Current Plan</Text>
             </View>
           ) : (
-            <View style={[styles.radioOuter, isSelected && styles.radioOuterSelected]}>
+            <View
+              style={[
+                styles.radioOuter,
+                isSelected && styles.radioOuterSelected,
+              ]}
+            >
               {isSelected && <View style={styles.radioInner} />}
             </View>
           )}
@@ -147,11 +172,17 @@ const SubscriptionScreen = ({ navigation }) => {
       {!isPremium && (
         <Card style={styles.statusCard}>
           <View style={styles.statusRow}>
-            <Ionicons name="ticket-outline" size={24} color={theme.colors.warning} />
+            <Ionicons
+              name="ticket-outline"
+              size={24}
+              color={theme.colors.warning}
+            />
             <View style={styles.statusInfo}>
               <Text style={styles.statusTitle}>Free Account</Text>
               <Text style={styles.statusText}>
-                {subscriptionStatus?.maxSessions - subscriptionStatus?.sessionsUsed || 5} sessions remaining
+                {subscriptionStatus?.maxSessions -
+                  subscriptionStatus?.sessionsUsed || 5}{' '}
+                sessions remaining
               </Text>
             </View>
           </View>
@@ -164,10 +195,12 @@ const SubscriptionScreen = ({ navigation }) => {
             <Ionicons name="star" size={24} color={theme.colors.primary} />
             <View style={styles.statusInfo}>
               <Text style={styles.statusTitle}>
-                {subscriptionStatus?.accountType === 'lifetime' ? 'Lifetime Member' : 'Premium Member'}
+                {subscriptionStatus?.accountType === 'lifetime'
+                  ? 'Lifetime Member'
+                  : 'Premium Member'}
               </Text>
               <Text style={styles.statusText}>
-                {subscriptionStatus?.subscriptionExpiry 
+                {subscriptionStatus?.subscriptionExpiry
                   ? `Expires: ${new Date(subscriptionStatus.subscriptionExpiry).toLocaleDateString()}`
                   : 'Never expires'}
               </Text>
@@ -178,7 +211,7 @@ const SubscriptionScreen = ({ navigation }) => {
 
       {/* Plan Cards */}
       <Text style={styles.sectionTitle}>Choose Your Plan</Text>
-      
+
       {renderPlanCard(SUBSCRIPTION_PLANS.MONTHLY, 'MONTHLY')}
       {renderPlanCard(SUBSCRIPTION_PLANS.YEARLY, 'YEARLY')}
       {renderPlanCard(SUBSCRIPTION_PLANS.LIFETIME, 'LIFETIME')}

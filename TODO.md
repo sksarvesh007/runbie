@@ -5,9 +5,11 @@
 ---
 
 ## PHASE 1: Project Setup & Foundation (Estimated: 2-3 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Project Initialization
+
 - [x] Create React Native project with Expo
 - [x] Set up project directory structure
 - [x] Configure package.json with all dependencies
@@ -16,12 +18,14 @@
 - [ ] Initialize Git repository
 
 ### Configuration Files
+
 - [x] Create .env.example file for environment variables
 - [x] Set up Firebase configuration structure
 - [x] Create Razorpay configuration structure
 - [x] Set up theme and constants files
 
 ### Basic Navigation
+
 - [x] Install and configure React Navigation v6
 - [x] Create Auth Stack Navigator
 - [x] Create Main Stack Navigator
@@ -29,19 +33,22 @@
 - [x] Set up navigation container with auth flow
 
 ### State Management
+
 - [x] Install and configure Zustand
 - [x] Create auth store
 - [x] Create session store
 - [x] Create user store
 
 ### Basic UI Components
+
 - [x] Create Button component
 - [x] Create Input component
 - [x] Create Card component
 - [x] Create Loading component
 - [ ] Create Header component
 
-**Phase 1 Completion Criteria**: 
+**Phase 1 Completion Criteria**:
+
 - Project runs on both iOS and Android
 - Navigation structure is in place
 - Basic components are reusable
@@ -50,9 +57,11 @@
 ---
 
 ## PHASE 2: Authentication (Estimated: 4-5 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Firebase Setup
+
 - [ ] Create Firebase project
 - [ ] Enable Authentication (Email/Password + Google)
 - [ ] Set up Firestore database
@@ -60,6 +69,7 @@
 - [ ] Set up security rules
 
 ### Email/Password Authentication
+
 - [ ] Create Login screen UI
 - [ ] Create Signup screen UI
 - [ ] Create Forgot Password screen UI
@@ -70,6 +80,7 @@
 - [ ] Add error handling
 
 ### Google OAuth
+
 - [ ] Configure Google Sign-In in Firebase
 - [ ] Install @react-native-google-signin/google-signin
 - [ ] Implement Google Sign-In button
@@ -77,6 +88,7 @@
 - [ ] Handle OAuth errors
 
 ### User Profile
+
 - [ ] Create user document in Firestore on signup
 - [ ] Implement user profile screen
 - [ ] Add profile photo upload
@@ -84,12 +96,14 @@
 - [ ] Implement logout functionality
 
 ### Auth State Management
+
 - [ ] Implement auth state persistence
 - [ ] Add auth state listener
 - [ ] Handle session expiry
 - [ ] Add loading states during auth
 
 **Phase 2 Completion Criteria**:
+
 - Users can sign up with email/password
 - Users can log in with Google
 - User data persists in Firestore
@@ -99,9 +113,11 @@
 ---
 
 ## PHASE 3: GPS Tracking & Location Services (Estimated: 5-6 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Location Permissions
+
 - [ ] Install expo-location
 - [ ] Request foreground location permissions
 - [ ] Request background location permissions
@@ -109,6 +125,7 @@
 - [ ] Add permission explanation screens
 
 ### GPS Tracking Implementation
+
 - [ ] Create location service module
 - [ ] Implement real-time location tracking
 - [ ] Set up high-accuracy GPS mode
@@ -116,6 +133,7 @@
 - [ ] Add location update listeners
 
 ### Distance & Pace Calculations
+
 - [ ] Implement Haversine formula for distance
 - [ ] Create pace calculation utility (min/km)
 - [ ] Implement moving average for pace smoothing
@@ -123,6 +141,7 @@
 - [ ] Track cumulative distance
 
 ### Background Tracking
+
 - [ ] Configure background location task
 - [ ] Implement battery-efficient tracking
 - [ ] Handle GPS signal loss
@@ -130,6 +149,7 @@
 - [ ] Test background tracking thoroughly
 
 ### Location Data Management
+
 - [ ] Create location point data structure
 - [ ] Implement location point storage
 - [ ] Add timestamp to each location point
@@ -137,6 +157,7 @@
 - [ ] Store route points array
 
 **Phase 3 Completion Criteria**:
+
 - GPS tracking works accurately
 - Pace calculations are smooth and accurate
 - Background tracking works when app is minimized
@@ -146,9 +167,11 @@
 ---
 
 ## PHASE 4: Map Integration & Visualization (Estimated: 4-5 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Map Setup
+
 - [ ] Install react-native-maps
 - [ ] Configure Google Maps API key
 - [ ] Set up MapView component
@@ -156,6 +179,7 @@
 - [ ] Configure map for Android
 
 ### User Location Display
+
 - [ ] Show user's current location on map
 - [ ] Add user location marker
 - [ ] Implement map camera following
@@ -163,6 +187,7 @@
 - [ ] Handle map loading states
 
 ### Route Visualization
+
 - [ ] Draw route polyline on map
 - [ ] Update polyline in real-time
 - [ ] Style route line (color, width)
@@ -170,6 +195,7 @@
 - [ ] Implement route replay functionality
 
 ### Zombie Visualization
+
 - [ ] Create zombie marker icon
 - [ ] Calculate zombie position on map
 - [ ] Update zombie position in real-time
@@ -177,6 +203,7 @@
 - [ ] Show distance between user and zombie
 
 ### Map UI Elements
+
 - [ ] Add zoom controls
 - [ ] Add center-on-user button
 - [ ] Add map type selector
@@ -184,6 +211,7 @@
 - [ ] Add danger zone visualization (when zombie is close)
 
 **Phase 4 Completion Criteria**:
+
 - Map displays user location accurately
 - Route trail updates in real-time
 - Zombie position is visible and updates
@@ -193,9 +221,11 @@
 ---
 
 ## PHASE 5: Zombie Chase Mechanics (Estimated: 6-7 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Zombie AI Logic
+
 - [ ] Create zombie service module
 - [ ] Calculate zombie pace (paceMax + 0.15)
 - [ ] Implement zombie position calculation
@@ -203,6 +233,7 @@
 - [ ] Calculate distance between user and zombie
 
 ### Catch Detection
+
 - [ ] Implement catch detection logic (≤10m)
 - [ ] Add catch event handling
 - [ ] Track number of catches
@@ -210,6 +241,7 @@
 - [ ] Log catch events
 
 ### Distance Eating Mechanism
+
 - [ ] Implement distance reduction when caught
 - [ ] Calculate eaten distance (1m per second)
 - [ ] Update total distance in real-time
@@ -217,6 +249,7 @@
 - [ ] Track total distance eaten
 
 ### Warning System
+
 - [ ] Implement proximity detection (50m warning)
 - [ ] Add visual warning indicators
 - [ ] Add audio warning sounds
@@ -224,6 +257,7 @@
 - [ ] Add haptic feedback
 
 ### Zombie State Management
+
 - [ ] Create zombie state in Zustand
 - [ ] Track zombie distance from user
 - [ ] Track zombie catch status
@@ -231,6 +265,7 @@
 - [ ] Reset zombie state on new run
 
 **Phase 5 Completion Criteria**:
+
 - Zombie chases user based on pace
 - Catch detection works accurately
 - Distance eating mechanism functions
@@ -240,9 +275,11 @@
 ---
 
 ## PHASE 6: Session Management (Estimated: 5-6 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Pre-Run Setup
+
 - [ ] Create RunSetup screen UI
 - [ ] Add distance goal input
 - [ ] Add pace zone inputs (min/max)
@@ -251,6 +288,7 @@
 - [ ] Add start run button
 
 ### Active Run Screen
+
 - [ ] Create ActiveRun screen UI
 - [ ] Display real-time stats (distance, pace, time)
 - [ ] Show zombie distance indicator
@@ -259,6 +297,7 @@
 - [ ] Implement session timer
 
 ### Session Control
+
 - [ ] Implement start session logic
 - [ ] Implement pause/resume logic
 - [ ] Implement stop session logic
@@ -266,6 +305,7 @@
 - [ ] Implement session recovery (crash handling)
 
 ### Session Data Storage
+
 - [ ] Create session document structure
 - [ ] Save session to Firestore on start
 - [ ] Update session incrementally (every 30s)
@@ -273,6 +313,7 @@
 - [ ] Store route points efficiently
 
 ### Session History
+
 - [ ] Create SessionHistory screen
 - [ ] Fetch user's sessions from Firestore
 - [ ] Display session list with key stats
@@ -280,6 +321,7 @@
 - [ ] Add pull-to-refresh
 
 ### Session Details
+
 - [ ] Create SessionDetail screen
 - [ ] Display full session statistics
 - [ ] Show route map replay
@@ -288,6 +330,7 @@
 - [ ] Add share functionality
 
 ### Session Statistics
+
 - [ ] Calculate average pace
 - [ ] Calculate max/min pace
 - [ ] Calculate completion percentage
@@ -295,6 +338,7 @@
 - [ ] Generate session summary
 
 **Phase 6 Completion Criteria**:
+
 - Users can set up and start runs
 - Sessions save correctly to Firestore
 - Session history displays properly
@@ -304,9 +348,11 @@
 ---
 
 ## PHASE 7: Subscriptions & Payments (Estimated: 6-8 hours)
+
 **Status**: ✅ COMPLETED
 
 ### Razorpay Setup
+
 - [ ] Create Razorpay account
 - [ ] Install razorpay-react-native SDK
 - [ ] Configure Razorpay keys
@@ -314,6 +360,7 @@
 - [ ] Create subscription plans in Razorpay
 
 ### Free Account Management
+
 - [ ] Implement session counter
 - [ ] Check session limit before run
 - [ ] Display remaining sessions
@@ -321,6 +368,7 @@
 - [ ] Show upgrade prompts
 
 ### Subscription Screen
+
 - [ ] Create Subscription screen UI
 - [ ] Display plan options (monthly/yearly/lifetime)
 - [ ] Show plan features and pricing
@@ -328,6 +376,7 @@
 - [ ] Implement purchase buttons
 
 ### Payment Flow
+
 - [ ] Implement Razorpay checkout
 - [ ] Handle payment success
 - [ ] Handle payment failure
@@ -335,6 +384,7 @@
 - [ ] Send payment receipt
 
 ### Subscription Management
+
 - [ ] Create subscription document in Firestore
 - [ ] Update user account type on purchase
 - [ ] Implement subscription status checking
@@ -342,6 +392,7 @@
 - [ ] Handle subscription expiry
 
 ### Firebase Cloud Functions
+
 - [ ] Set up Firebase Functions
 - [ ] Create Razorpay webhook handler
 - [ ] Verify webhook signatures
@@ -350,6 +401,7 @@
 - [ ] Handle subscription cancellation
 
 ### Subscription State
+
 - [ ] Add subscription state to user store
 - [ ] Check subscription status on app launch
 - [ ] Update UI based on subscription
@@ -357,6 +409,7 @@
 - [ ] Add manage subscription option
 
 **Phase 7 Completion Criteria**:
+
 - Free accounts limited to 5 sessions
 - Payment flow works smoothly
 - Subscriptions activate immediately
@@ -366,9 +419,11 @@
 ---
 
 ## PHASE 8: UI/UX Polish & Optimization (Estimated: 4-5 hours)
+
 **Status**: ⏳ PENDING
 
 ### UI Refinement
+
 - [ ] Apply consistent theme across app
 - [ ] Add smooth animations and transitions
 - [ ] Improve button and input styling
@@ -377,6 +432,7 @@
 - [ ] Add success/error toast messages
 
 ### Onboarding
+
 - [ ] Create onboarding screens
 - [ ] Add app tutorial
 - [ ] Create first-run experience
@@ -384,6 +440,7 @@
 - [ ] Implement skip functionality
 
 ### Performance Optimization
+
 - [ ] Optimize map rendering
 - [ ] Reduce unnecessary re-renders
 - [ ] Implement lazy loading
@@ -391,6 +448,7 @@
 - [ ] Minimize bundle size
 
 ### Accessibility
+
 - [ ] Add accessibility labels
 - [ ] Ensure proper contrast ratios
 - [ ] Test with screen readers
@@ -398,6 +456,7 @@
 - [ ] Implement large text support
 
 ### Error Handling
+
 - [ ] Add global error boundary
 - [ ] Implement offline mode handling
 - [ ] Add retry mechanisms
@@ -405,12 +464,14 @@
 - [ ] Log errors to Firebase Crashlytics
 
 ### App Icon & Splash Screen
+
 - [ ] Design app icon
 - [ ] Create splash screen
 - [ ] Configure app metadata
 - [ ] Set up app store assets
 
 **Phase 8 Completion Criteria**:
+
 - App looks polished and professional
 - Animations are smooth
 - Error handling is comprehensive
@@ -420,9 +481,11 @@
 ---
 
 ## PHASE 9: Testing & Bug Fixes (Estimated: 5-6 hours)
+
 **Status**: ⏳ PENDING
 
 ### Functional Testing
+
 - [ ] Test authentication flows
 - [ ] Test GPS tracking accuracy
 - [ ] Test zombie mechanics
@@ -431,6 +494,7 @@
 - [ ] Test subscription management
 
 ### Device Testing
+
 - [ ] Test on iOS devices
 - [ ] Test on Android devices
 - [ ] Test on different screen sizes
@@ -439,6 +503,7 @@
 - [ ] Test with poor network connection
 
 ### Edge Cases
+
 - [ ] Test with no internet connection
 - [ ] Test with GPS disabled
 - [ ] Test with permissions denied
@@ -447,6 +512,7 @@
 - [ ] Test low battery scenarios
 
 ### Bug Fixes
+
 - [ ] Fix any crashes
 - [ ] Fix navigation issues
 - [ ] Fix data persistence issues
@@ -454,6 +520,7 @@
 - [ ] Fix performance issues
 
 ### Final Polish
+
 - [ ] Review all error messages
 - [ ] Test all user flows end-to-end
 - [ ] Verify all features work as expected
@@ -461,6 +528,7 @@
 - [ ] Optimize battery usage
 
 **Phase 9 Completion Criteria**:
+
 - No critical bugs
 - App is stable on both platforms
 - All features work as designed
@@ -470,9 +538,11 @@
 ---
 
 ## PHASE 10: Deployment Preparation (Estimated: 3-4 hours)
+
 **Status**: ⏳ PENDING
 
 ### App Store Preparation
+
 - [ ] Create app store listing
 - [ ] Prepare screenshots
 - [ ] Write app description
@@ -481,6 +551,7 @@
 - [ ] Create terms of service
 
 ### Build Configuration
+
 - [ ] Configure production environment
 - [ ] Set up production Firebase project
 - [ ] Configure production Razorpay keys
@@ -488,6 +559,7 @@
 - [ ] Create production builds
 
 ### iOS Deployment
+
 - [ ] Set up Apple Developer account
 - [ ] Create app in App Store Connect
 - [ ] Configure certificates and profiles
@@ -495,6 +567,7 @@
 - [ ] Submit for review
 
 ### Android Deployment
+
 - [ ] Set up Google Play Console
 - [ ] Create app listing
 - [ ] Configure signing keys
@@ -502,6 +575,7 @@
 - [ ] Submit for review
 
 **Phase 10 Completion Criteria**:
+
 - App submitted to both stores
 - All store assets are ready
 - Production environment configured
@@ -512,6 +586,7 @@
 ## Dependencies to Install
 
 ### Core Dependencies
+
 ```json
 {
   "expo": "~51.0.0",
@@ -540,6 +615,7 @@
 ```
 
 ### Dev Dependencies
+
 ```json
 {
   "@babel/core": "^7.20.0",
@@ -582,6 +658,7 @@ GOOGLE_ANDROID_CLIENT_ID=
 ## Notes & Decisions
 
 ### Technical Decisions
+
 - Using Expo for easier cross-platform development
 - Zustand for lightweight state management
 - Firebase for backend (auth, database, functions)
@@ -589,6 +666,7 @@ GOOGLE_ANDROID_CLIENT_ID=
 - React Native Maps with Google Maps provider
 
 ### Key Considerations
+
 - GPS accuracy is critical - implement filtering and smoothing
 - Battery optimization for background tracking
 - Zombie mechanics must feel fair and engaging
@@ -596,6 +674,7 @@ GOOGLE_ANDROID_CLIENT_ID=
 - Free tier limitation enforcement must be robust
 
 ### Testing Strategy
+
 - Test GPS tracking in various conditions (urban, rural, indoor)
 - Test with different phone models and OS versions
 - Test payment flows thoroughly in sandbox mode
