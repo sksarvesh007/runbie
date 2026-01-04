@@ -31,6 +31,11 @@ const HomeStack = () => {
         component={ActiveRunScreen}
         options={{ headerShown: false }}
       />
+      <Stack.Screen 
+        name="Subscription" 
+        component={SubscriptionScreen}
+        options={{ title: 'Upgrade' }}
+      />
     </Stack.Navigator>
   );
 };

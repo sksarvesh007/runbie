@@ -6,6 +6,7 @@ import Button from '../../components/common/Button';
 import { RunMap } from '../../components/map';
 import { locationService, formatDistance, formatPace, formatTime, calculateDistance } from '../../services/location.service';
 import { zombieService, ZOMBIE_CONSTANTS } from '../../services/zombie.service';
+import { sessionService } from '../../services/session.service';
 import useSessionStore from '../../store/sessionStore';
 
 const ActiveRunScreen = ({ navigation }) => {
@@ -100,6 +101,27 @@ const ActiveRunScreen = ({ navigation }) => {
 
     return () => clearInterval(eatingInterval);
   }, [isCaught, isPaused]);
+
+  // Periodic save to Firestore
+  useEffect(() => {
+    if (!currentSession || !isRunning) return;
+
+    const saveInterval = setInterval(() => {
+      const state = useSessionStore.getState();
+      sessionService.updateSession({
+        distanceRun: state.distanceRun,
+        effectiveDistance: Math.max(0, state.distanceRun - state.totalDistanceEaten),
+        totalDistanceEaten: state.totalDistanceEaten,
+        elapsedTime: state.elapsedTime,
+        currentPace: state.currentPace,
+        catchCount: state.catchCount,
+        routePointsCount: state.routePoints.length,
+        isPaused: state.isPaused,
+      });
+    }, 30000); // Save every 30 seconds
+
+    return () => clearInterval(saveInterval);
+  }, [currentSession, isRunning]);
 
   const startTracking = async () => {
     try {
@@ -268,9 +290,27 @@ const ActiveRunScreen = ({ navigation }) => {
         {
           text: 'End Run',
           style: 'destructive',
-          onPress: () => {
+          onPress: async () => {
             stopTracking();
             stopTimer();
+            
+            // Save session to Firestore
+            const state = useSessionStore.getState();
+            try {
+              await sessionService.completeSession({
+                distanceRun: state.distanceRun,
+                effectiveDistance: Math.max(0, state.distanceRun - state.totalDistanceEaten),
+                totalDistanceEaten: state.totalDistanceEaten,
+                elapsedTime: state.elapsedTime,
+                averagePace: state.currentPace,
+                catchCount: state.catchCount,
+                catchEvents: state.catchEvents,
+                distanceGoal: state.currentSession?.distanceGoal || 0,
+              }, state.routePoints);
+            } catch (error) {
+              console.error('Failed to save session:', error);
+            }
+            
             stopSession();
             // Navigate back to home
             navigation.reset({

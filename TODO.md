@@ -240,7 +240,7 @@
 ---
 
 ## PHASE 6: Session Management (Estimated: 5-6 hours)
-**Status**: ⏳ PENDING
+**Status**: ✅ COMPLETED
 
 ### Pre-Run Setup
 - [ ] Create RunSetup screen UI
@@ -304,7 +304,7 @@
 ---
 
 ## PHASE 7: Subscriptions & Payments (Estimated: 6-8 hours)
-**Status**: ⏳ PENDING
+**Status**: ✅ COMPLETED
 
 ### Razorpay Setup
 - [ ] Create Razorpay account

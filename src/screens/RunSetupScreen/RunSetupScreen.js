@@ -5,6 +5,8 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import Card from '../../components/common/Card';
 import { locationService } from '../../services/location.service';
+import { sessionService } from '../../services/session.service';
+import { subscriptionService } from '../../services/subscription.service';
 import useSessionStore from '../../store/sessionStore';
 
 const RunSetupScreen = ({ navigation }) => {
@@ -13,12 +15,19 @@ const RunSetupScreen = ({ navigation }) => {
   const [paceMax, setPaceMax] = useState('7');
   const [isLoading, setIsLoading] = useState(false);
   const [hasLocationPermission, setHasLocationPermission] = useState(false);
+  const [sessionLimit, setSessionLimit] = useState(null);
   
   const startSession = useSessionStore((state) => state.startSession);
 
   useEffect(() => {
     checkPermissions();
+    checkSessionLimit();
   }, []);
+
+  const checkSessionLimit = async () => {
+    const limit = await subscriptionService.canStartSession();
+    setSessionLimit(limit);
+  };
 
   const checkPermissions = async () => {
     const permissions = await locationService.checkPermissions();
@@ -76,6 +85,19 @@ const RunSetupScreen = ({ navigation }) => {
   };
 
   const handleStartRun = async () => {
+    // Check session limit first
+    if (sessionLimit && !sessionLimit.allowed) {
+      Alert.alert(
+        'Session Limit Reached',
+        'You have used all your free sessions. Upgrade to Premium for unlimited zombie runs!',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Upgrade', onPress: () => navigation.navigate('Subscription') },
+        ]
+      );
+      return;
+    }
+
     if (!hasLocationPermission) {
       await requestPermissions();
       return;
@@ -95,6 +117,17 @@ const RunSetupScreen = ({ navigation }) => {
         status: 'active',
       };
 
+      // Start session in Firestore
+      await sessionService.startSession({
+        distanceGoal: sessionData.distanceGoal,
+        paceMin: sessionData.paceMin,
+        paceMax: sessionData.paceMax,
+        zombiePace: sessionData.zombiePace,
+      });
+
+      // Increment session count for free users
+      await subscriptionService.incrementSessionCount();
+
       startSession(sessionData);
       navigation.navigate('ActiveRun');
     } catch (error) {
@@ -109,6 +142,25 @@ const RunSetupScreen = ({ navigation }) => {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Setup Your Run 🏃‍♂️</Text>
       <Text style={styles.subtitle}>Configure your run settings and outrun the zombie!</Text>
+
+      {/* Session Limit Warning */}
+      {sessionLimit && sessionLimit.remaining !== -1 && (
+        <Card style={[styles.limitCard, sessionLimit.remaining <= 1 && styles.limitCardWarning]}>
+          <Text style={styles.limitTitle}>
+            {sessionLimit.remaining > 0 
+              ? `🎫 ${sessionLimit.remaining} free session${sessionLimit.remaining > 1 ? 's' : ''} remaining`
+              : '🚫 No sessions remaining'}
+          </Text>
+          {sessionLimit.remaining <= 2 && (
+            <Button
+              title="Upgrade to Premium"
+              variant="outline"
+              onPress={() => navigation.navigate('Subscription')}
+              style={styles.upgradeButton}
+            />
+          )}
+        </Card>
+      )}
 
       {!hasLocationPermission && (
         <Card style={styles.permissionCard}>
@@ -297,6 +349,24 @@ const styles = StyleSheet.create({
   },
   startButton: {
     marginTop: theme.spacing.lg,
+  },
+  limitCard: {
+    marginBottom: theme.spacing.lg,
+    backgroundColor: theme.colors.primary + '10',
+    borderWidth: 1,
+    borderColor: theme.colors.primary + '30',
+  },
+  limitCardWarning: {
+    backgroundColor: theme.colors.warning + '10',
+    borderColor: theme.colors.warning + '30',
+  },
+  limitTitle: {
+    ...theme.typography.body1,
+    color: theme.colors.text,
+    textAlign: 'center',
+  },
+  upgradeButton: {
+    marginTop: theme.spacing.md,
   },
 });
 
