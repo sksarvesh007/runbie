@@ -1,11 +1,14 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, Share } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, Text, StyleSheet, ScrollView, Share, Modal, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 import { theme } from '../../theme';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import Loading from '../../components/common/Loading';
 import { RunMap } from '../../components/map';
+import { ShareCard } from '../../components/share';
 import { sessionService } from '../../services/session.service';
 import {
   formatDistance,
@@ -20,6 +23,9 @@ const SessionDetailScreen = ({ route, navigation }) => {
   const [session, setSession] = useState(null);
   const [routePoints, setRoutePoints] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isCapturing, setIsCapturing] = useState(false);
+  const [showShareCard, setShowShareCard] = useState(false);
+  const shareCardRef = useRef(null);
 
   useEffect(() => {
     if (sessionId) {
@@ -59,22 +65,47 @@ const SessionDetailScreen = ({ route, navigation }) => {
   const handleShare = async () => {
     if (!session) return;
 
-    try {
-      const message =
-        `🏃 Run completed!\n\n` +
-        `📏 Distance: ${formatDistance(session.effectiveDistance || 0)}\n` +
-        `⏱️ Time: ${formatTime(session.elapsedTime || 0)}\n` +
-        `⚡ Pace: ${formatPace(session.averagePace || 0)} min/km\n` +
-        `🎯 Goal: ${(session.completionPercentage || 0).toFixed(0)}% completed\n` +
-        (session.catchCount > 0
-          ? `🧟 Caught ${session.catchCount} times\n`
-          : '') +
-        `\n#Runbie #ZombieRun`;
+    // Show the share card first
+    setShowShareCard(true);
+    setIsCapturing(true);
 
-      await Share.share({ message });
-    } catch (error) {
-      console.error('Failed to share:', error);
-    }
+    // Wait for the share card and map to fully render
+    setTimeout(async () => {
+      try {
+        if (!shareCardRef.current) {
+          throw new Error('Share card not ready');
+        }
+
+        // Capture the share card as an image
+        const uri = await captureRef(shareCardRef, {
+          format: 'png',
+          quality: 1,
+          result: 'tmpfile',
+        });
+
+        setShowShareCard(false);
+        setIsCapturing(false);
+
+        // Check if sharing is available
+        const isAvailable = await Sharing.isAvailableAsync();
+        if (isAvailable) {
+          await Sharing.shareAsync(uri, {
+            mimeType: 'image/png',
+            dialogTitle: 'Share your run',
+          });
+        } else {
+          // Fallback to text share
+          await Share.share({
+            message: `🏃 Run completed!\n📏 ${formatDistance(session.effectiveDistance || 0)}\n⏱️ ${formatTime(session.elapsedTime || 0)}\n⚡ ${formatPace(session.averagePace || 0)} min/km\n\n#Runbie #ZombieRun`,
+          });
+        }
+      } catch (error) {
+        console.error('Failed to capture/share:', error);
+        setShowShareCard(false);
+        setIsCapturing(false);
+        Alert.alert('Share Failed', 'Unable to create share image. Please try again.');
+      }
+    }, 1500); // Give more time for map to fully render
   };
 
   if (isLoading) {
@@ -272,18 +303,30 @@ const SessionDetailScreen = ({ route, navigation }) => {
 
       {/* Share Button */}
       <Button
-        title="Share Run"
+        title={isCapturing ? "Generating..." : "Share Run"}
         onPress={handleShare}
+        disabled={isCapturing}
         style={styles.shareButton}
         icon={
           <Ionicons
-            name="share-outline"
+            name={isCapturing ? "hourglass-outline" : "share-outline"}
             size={20}
             color="#FFF"
             style={{ marginRight: 8 }}
           />
         }
       />
+
+      {/* Hidden Share Card for Capture */}
+      {showShareCard && (
+        <View style={styles.shareCardContainer}>
+          <ShareCard
+            ref={shareCardRef}
+            session={session}
+            routePoints={routePoints}
+          />
+        </View>
+      )}
     </ScrollView>
   );
 };
@@ -439,6 +482,11 @@ const styles = StyleSheet.create({
   },
   shareButton: {
     marginTop: theme.spacing.md,
+  },
+  shareCardContainer: {
+    position: 'absolute',
+    left: -9999,
+    top: 0,
   },
 });
 
