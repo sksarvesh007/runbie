@@ -14,6 +14,7 @@ const RunMap = ({
   style,
   showOverlay = true,
   onPress,
+  controlsContainerStyle,
 }) => {
   const mapRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(followUser);
@@ -35,6 +36,7 @@ const RunMap = ({
 
   const handleCenterOnUser = () => {
     if (currentLocation && mapRef.current) {
+      console.log('RunMap: Centering on user', currentLocation);
       setIsFollowing(true);
       mapRef.current.animateToRegion(
         {
@@ -183,22 +185,24 @@ const RunMap = ({
         />
       )}
 
-      {/* Map Controls */}
-      <View style={styles.controls}>
-        <TouchableOpacity
-          style={[
-            styles.controlButton,
-            isFollowing && styles.controlButtonActive,
-          ]}
-          onPress={handleCenterOnUser}
-        >
-          <Ionicons
-            name="locate"
-            size={24}
-            color={isFollowing ? '#FFFFFF' : theme.colors.text}
-          />
-        </TouchableOpacity>
-      </View>
+      {/* Map Controls - Only show if not in minimap mode (no onPress) */}
+      {!onPress && (
+        <View style={[styles.controls, controlsContainerStyle]}>
+          <TouchableOpacity
+            style={[
+              styles.controlButton,
+              isFollowing && styles.controlButtonActive,
+            ]}
+            onPress={handleCenterOnUser}
+          >
+            <Ionicons
+              name="locate"
+              size={24}
+              color={isFollowing ? '#FFFFFF' : theme.colors.text}
+            />
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* Zombie Distance Overlay */}
       {showZombie && showOverlay && (

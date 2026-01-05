@@ -482,6 +482,7 @@ const ActiveRunScreen = ({ navigation }) => {
           followUser={true}
           style={styles.expandedMap}
           showOverlay={false}
+          controlsContainerStyle={{ top: 170, bottom: undefined, right: 12 }}
         />
 
         {/* Zombie Start Countdown Overlay - Liquid Glass */}
@@ -752,40 +753,7 @@ const ActiveRunScreen = ({ navigation }) => {
           onPress={() => setIsMapExpanded(true)}
         />
 
-        {/* Current KM Overlay */}
-        <View style={styles.miniMapOverlay} pointerEvents="none">
-          <Text style={styles.miniMapOverlayLabel}>
-            {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY
-              ? `ZOMBIE IN ${Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s`
-              : 'ZOMBIE GAP'}
-          </Text>
-          <View style={styles.miniMapOverlayValues}>
-            <Text
-              style={[
-                styles.miniMapOverlayValue,
-                { color: zombieStatus.color },
-              ]}
-            >
-              {zombieGap > 0
-                ? `+${Math.round(zombieGap)}`
-                : Math.round(zombieGap)}
-              m
-            </Text>
-            <Text
-              style={[
-                styles.miniMapOverlayValue,
-                { color: defaultTheme.colors.primary },
-              ]}
-            >
-              {formatPace(currentPace)}
-            </Text>
-          </View>
-        </View>
 
-        {/* Expand Hint */}
-        <View style={styles.miniExpandHint} pointerEvents="none">
-          <Ionicons name="expand" size={14} color="rgba(255,255,255,0.6)" />
-        </View>
       </View>
 
       {/* Bottom Controls */}
@@ -1039,8 +1007,8 @@ const styles = StyleSheet.create({
   },
   collapseButton: {
     position: 'absolute',
-    top: 60,
-    left: 20, // Moved to left
+    top: 110,
+    right: 12,
     width: 44,
     height: 44,
     borderRadius: 22,
