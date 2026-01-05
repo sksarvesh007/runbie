@@ -11,6 +11,7 @@ import {
   StatusBar,
   PanResponder,
   Animated,
+  Pressable,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
@@ -738,11 +739,7 @@ const ActiveRunScreen = ({ navigation }) => {
       </View>
 
       {/* Map Section with Current KM Overlay */}
-      <TouchableOpacity
-        style={styles.miniMapSection}
-        onPress={() => setIsMapExpanded(true)}
-        activeOpacity={0.95}
-      >
+      <View style={styles.miniMapSection}>
         <RunMap
           routePoints={routePoints}
           currentLocation={currentLocation}
@@ -752,30 +749,44 @@ const ActiveRunScreen = ({ navigation }) => {
           followUser={true}
           style={styles.miniMapInner}
           showOverlay={false}
+          onPress={() => setIsMapExpanded(true)}
         />
 
         {/* Current KM Overlay */}
-        <View style={styles.miniMapOverlay}>
+        <View style={styles.miniMapOverlay} pointerEvents="none">
           <Text style={styles.miniMapOverlayLabel}>
             {elapsedTime < ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY
               ? `ZOMBIE IN ${Math.max(0, ZOMBIE_CONSTANTS.ZOMBIE_START_DELAY - elapsedTime)}s`
               : 'ZOMBIE GAP'}
           </Text>
           <View style={styles.miniMapOverlayValues}>
-            <Text style={[styles.miniMapOverlayValue, { color: zombieStatus.color }]}>
-              {zombieGap > 0 ? `+${Math.round(zombieGap)}` : Math.round(zombieGap)}m
+            <Text
+              style={[
+                styles.miniMapOverlayValue,
+                { color: zombieStatus.color },
+              ]}
+            >
+              {zombieGap > 0
+                ? `+${Math.round(zombieGap)}`
+                : Math.round(zombieGap)}
+              m
             </Text>
-            <Text style={[styles.miniMapOverlayValue, { color: defaultTheme.colors.primary }]}>
+            <Text
+              style={[
+                styles.miniMapOverlayValue,
+                { color: defaultTheme.colors.primary },
+              ]}
+            >
               {formatPace(currentPace)}
             </Text>
           </View>
         </View>
 
         {/* Expand Hint */}
-        <View style={styles.miniExpandHint}>
+        <View style={styles.miniExpandHint} pointerEvents="none">
           <Ionicons name="expand" size={14} color="rgba(255,255,255,0.6)" />
         </View>
-      </TouchableOpacity>
+      </View>
 
       {/* Bottom Controls */}
       <View style={styles.miniControlsSection}>
@@ -1430,6 +1441,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 16,
     gap: 24,
+  },
+  miniMapExpandOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 10,
   },
   miniPauseBtn: {
     width: 56,

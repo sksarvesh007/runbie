@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from 'react';
-import { View, StyleSheet, Text, TouchableOpacity, Image } from 'react-native';
+import { View, StyleSheet, Text, TouchableOpacity, Image, Pressable } from 'react-native';
 import MapView, { Marker, Polyline, PROVIDER_GOOGLE } from 'react-native-maps';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
@@ -13,6 +13,7 @@ const RunMap = ({
   followUser = true,
   style,
   showOverlay = true,
+  onPress,
 }) => {
   const mapRef = useRef(null);
   const [isFollowing, setIsFollowing] = useState(followUser);
@@ -108,6 +109,8 @@ const RunMap = ({
         showsCompass={false}
         onPanDrag={handleMapDrag}
         mapType="standard"
+        scrollEnabled={!onPress} // Disable scroll if we want tap-to-expand
+        zoomEnabled={!onPress}
       >
         {/* Route Polyline */}
         {routeCoordinates.length > 1 && (
@@ -171,6 +174,14 @@ const RunMap = ({
           </Marker>
         )}
       </MapView>
+
+      {/* Tap Overlay for Expand (if onPress provided) */}
+      {onPress && (
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={onPress}
+        />
+      )}
 
       {/* Map Controls */}
       <View style={styles.controls}>
